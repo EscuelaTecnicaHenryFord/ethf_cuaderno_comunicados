@@ -1,4 +1,6 @@
 import { z } from "zod";
+import path from 'path'
+import fs from 'fs'
 
 /**
  * Specify your server-side environment variables schema here. This way you can ensure the app isn't
@@ -22,6 +24,8 @@ const server = z.object({
   AZUREAD_CLIENT_ID: z.string(),
   AZUREAD_CLIENT_SECRET: z.string(),
   AZUREAD_TENANT_ID: z.string(),
+  SETTINGS_PATH: z.string(),
+  DATA_PATH: z.string(),
 });
 
 /**
@@ -46,6 +50,8 @@ const processEnv = {
   AZUREAD_CLIENT_ID: process.env.AZUREAD_CLIENT_ID,
   AZUREAD_CLIENT_SECRET: process.env.AZUREAD_CLIENT_SECRET,
   AZUREAD_TENANT_ID: process.env.AZUREAD_TENANT_ID,
+  SETTINGS_PATH: process.env.SETTINGS_PATH || path.resolve('./.local/settings'),
+  DATA_PATH: process.env.DATA_PATH || path.resolve('./.local/data'),
   // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
 };
 
@@ -92,5 +98,8 @@ if (!!process.env.SKIP_ENV_VALIDATION == false) {
     },
   });
 }
+
+if (!fs.existsSync(env.SETTINGS_PATH)) fs.mkdirSync(env.SETTINGS_PATH, { recursive: true });
+if (!fs.existsSync(env.DATA_PATH)) fs.mkdirSync(env.DATA_PATH, { recursive: true });
 
 export { env };
