@@ -3,7 +3,7 @@ import Head from "next/head";
 
 import Layout from "~/lib/layout";
 import { useRouter } from "next/router";
-import { coursesSubMenu } from "~/lib/menus";
+import { useCoursesSubMenu } from "~/lib/menus";
 import { api } from "~/utils/api";
 import Link from "next/link";
 import { useMemo } from "react";
@@ -14,11 +14,13 @@ const Home: NextPage = () => {
     const enrolment = router.query.enrolment?.toString()
     const materia = router.query.materia?.toString()
     const { data: student } = api.getStudent.useQuery(enrolment || '', { enabled: !!enrolment })
-    const { data: communications } = api.getMyCommunications.useQuery()
+    const { data: communications } = api.getCommunications.useQuery()
 
     const filteredCommunications = useMemo(() => {
         return communications?.filter(communication => communication.studentEnrolment === enrolment)
     }, [communications, enrolment])
+
+    const menu = useCoursesSubMenu(student?.coursingYear || 0, materia)
 
     return (
         <>
@@ -28,20 +30,10 @@ const Home: NextPage = () => {
             </Head>
             {enrolment && <Layout
                 title={student ? `${enrolment} - ${student.name}` : enrolment}
-                menu={[
-                    {
-                        label: 'Inicio',
-                        href: '/',
-                    },
-                    {
-                        label: 'Mis comunicaciones',
-                        href: '/mis-comunicaciones',
-                    },
-                    {
-                        label: 'Mis materias',
-                        href: '/mis-materias',
-                    },
-                ]}
+                menu={student ? menu : [{
+                    label: 'Inicio',
+                    href: '/',
+                }]}
                 nav={[]}
             >
                 <h1 className="text-xl mt-2">{student?.name}</h1>

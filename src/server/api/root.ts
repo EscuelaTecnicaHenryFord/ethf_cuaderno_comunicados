@@ -14,20 +14,24 @@ export const appRouter = createTRPCRouter({
   getStudentsOf: protectedProcedure.input(z.number()).query(({ input }) => {
     return settings.getStudentsOf(input);
   }),
-  getSubjectsOfYear: protectedProcedure.input(z.number()).query(({ input }) => {
-    return settings.getSubjectsOfYear(input);
-  }),
   getStudent: protectedProcedure.input(z.string()).query(({ input }) => {
     return settings.getStudentByEnrolment(input);
   }),
   getMySubjects: protectedProcedure.query(({ ctx }) => {
     return settings.getSubjectsOf(ctx.session.user.email || '');
   }),
+  getSubjectsOfYear: protectedProcedure.input(z.number()).query(async ({ input, ctx }) => {
+    const role = await settings.getUserRole(ctx.session.user.email || '');
+    return await settings.getSubjectsOfYear(input);
+  }),
   getSubject: protectedProcedure.input(z.string()).query(({ input }) => {
     return settings.getSubject(input);
   }),
   getMessages: protectedProcedure.query(({ ctx }) => {
     return settings.getMessages()
+  }),
+  getUserRole: protectedProcedure.query(({ ctx }) => {
+    return settings.getUserRole(ctx.session.user.email || '');
   }),
   createCommunication: protectedProcedure.input(z.object({
     subject: z.string(),
@@ -49,19 +53,24 @@ export const appRouter = createTRPCRouter({
       }
     })
   }),
-  getMyCommunications: protectedProcedure.query(async ({ ctx }) => {
+  getCommunications: protectedProcedure.input(z.object({
+    mineOnly: z.boolean()
+  }).optional()).query(async ({ ctx, input }) => {
     if (!ctx.session.user.email) throw new Error('No email found in session');
+    const role = await settings.getUserRole(ctx.session.user.email || '');
 
     const result = await ctx.prisma.communication.findMany({
       where: {
-        teacherEmail: ctx.session.user.email
+        teacherEmail: (!role.isAdmin || input?.mineOnly) ? ctx.session.user.email : undefined
       }
     })
 
-    return Promise.all(result.map(async communication => ({
+    return await Promise.all(result.map(async communication => ({
       ...communication,
       student: await settings.getStudentByEnrolment(communication.studentEnrolment),
       subject: await settings.getSubject(communication.subjectCode),
+      teacher: await settings.getTeacher(communication.teacherEmail),
+      isMine: communication.teacherEmail === ctx.session.user.email,
     })));
   })
 });

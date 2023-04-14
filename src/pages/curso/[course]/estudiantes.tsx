@@ -3,7 +3,7 @@ import Head from "next/head";
 
 import Layout from "~/lib/layout";
 import { useRouter } from "next/router";
-import { coursesSubMenu } from "~/lib/menus";
+import { coursesSubMenu, useCoursesSubMenu } from "~/lib/menus";
 import { api } from "~/utils/api";
 import Link from "next/link";
 
@@ -13,15 +13,17 @@ const Home: NextPage = () => {
   const code = router.query.materia?.toString()
   const { data: students } = api.getStudentsOf.useQuery(courseYear)
 
+  const menu = useCoursesSubMenu(courseYear, code)
+
   return (
     <>
       <Head>
-        <title>Estudiantes</title>
+        <title>Estudiantes de {courseYear}°</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Layout
         title="Inicio"
-        menu={coursesSubMenu(courseYear, code)}
+        menu={menu}
         nav={[]}
       >
         {students?.map(student => (<Link key={student.enrolment}

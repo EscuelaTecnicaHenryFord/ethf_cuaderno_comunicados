@@ -1,5 +1,6 @@
-import { useSession } from "next-auth/react"
+import { signIn, useSession } from "next-auth/react"
 import Link from "next/link"
+import iconSVG from '../../public/icon.svg'
 
 interface Props {
     children: React.ReactNode
@@ -14,19 +15,68 @@ interface Props {
     }[]
 }
 
-export default function Layout({ title, children, menu, nav }: Props) {
+export default function AuthedLayout({ title, children, menu, nav }: Props) {
 
     const { data: session, status } = useSession()
-    
 
+    const isLoading = status === "loading"
+
+    if (isLoading) {
+        return <Layout
+            title={title}
+            menu={menu}
+            nav={nav}
+        >
+            <h1 className="text-center mt-5 font-xl">
+                Cargando...
+            </h1>
+        </Layout>
+    }
+
+    if (status === 'unauthenticated') {
+        return <Layout
+            title={title}
+            menu={[{
+                label: "Iniciar sesión",
+                href: "/api/auth/signin/azure-ad"
+            }]}
+            nav={[]}
+        >
+            <h1 className="text-center mt-5 font-xl">
+                No tienes permiso para ver esta página
+            </h1>
+            <Link
+                href="/api/auth/signin/azure-ad"
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded my-2 text-center"
+                onClick={e => {
+                    e.preventDefault()
+                    signIn('azure-ad')
+                }}
+            >
+                Ingresar al sistema
+            </Link>
+        </Layout>
+    }
+
+    return <Layout
+        title={title}
+        menu={menu}
+        nav={nav}
+    >
+        {children}
+    </Layout>
+}
+
+function Layout({ title, children, menu, nav }: Props) {
     return <div className="mx-auto flex flex-col space-y-6">
         <header className="mx-[1.5rem] sticky top-0 z-40 bg-white">
             <div className="flex h-16 items-center justify-between border-b border-b-slate-200 py-4">
                 <div className="flex gap-6 md:gap-10">
                     <Link className="hidden items-center space-x-2 md:flex" href="/">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-command">
+                        {/* <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-command">
                             <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"></path>
-                        </svg>
+                        </svg> */}
+                        <img src={iconSVG.src} alt="" width={24} height={24} />
                         <span className="hidden font-bold sm:inline-block">Cuaderno</span>
                     </Link>
                     <nav className="hidden gap-6 md:flex">

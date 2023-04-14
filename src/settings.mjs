@@ -8,6 +8,7 @@ const maxCourse = 7
 
 export const generalSettingsSchema = z.object({
     messages: z.array(z.string()),
+    admins: z.array(z.string()).optional().nullable(),
 })
 
 export const teacherSchema = z.object({
@@ -48,7 +49,7 @@ export class Settings {
     _teachersByEmail = new Map();
     /** @type {Map<string, z.infer<typeof subjectSchema>>} */
     _subjectsByCode = new Map();
-    /** @type {Map<string, z.infer<typeof subjectSchema>[]>} */
+    /** @type {Map<string, Set<string>>} */
     _subjectsByTeacher = new Map();
 
     _dataImported = false;
@@ -98,7 +99,14 @@ export class Settings {
     /** @param {string} email */
     async getSubjectsOf(email) {
         await this._autoImport();
-        return this._subjectsByTeacher.get(email) || [];
+        const list = [...(this._subjectsByTeacher.get(email) || new Set())].map(code => this._subjectsByCode.get(code))
+        /** @type {Array<z.infer<typeof subjectSchema>>} */
+        const result = []
+        for (const subject of list) {
+            if(!subject) continue
+            result.push(subject);
+        }
+        return result
     }
 
     /** @param {string} code */
@@ -110,6 +118,12 @@ export class Settings {
     async getMessages() {
         await this._autoImport();
         return this.general.messages;
+    }
+
+    /** @param {string} email */
+    async getTeacher(email) {
+        await this._autoImport();
+        return this._teachersByEmail.get(email);
     }
 
     async importData() {
@@ -136,10 +150,10 @@ export class Settings {
         this.teachers.forEach(teacher => this._teachersByEmail.set(teacher.email, teacher));
         this.subjects.forEach(subject => this._subjectsByCode.set(subject.code, subject));
 
-        for(const subject of this.subjects) {
-            for(const teacherEmail of subject.teachers) {
-                const teacherSubjects = this._subjectsByTeacher.get(teacherEmail) || [];
-                teacherSubjects.push(subject);
+        for (const subject of this.subjects) {
+            for (const teacherEmail of subject.teachers) {
+                const teacherSubjects = this._subjectsByTeacher.get(teacherEmail) || new Set();
+                teacherSubjects.add(subject.code);
                 this._subjectsByTeacher.set(teacherEmail, teacherSubjects);
             }
         }
@@ -158,6 +172,17 @@ export class Settings {
             })
         }
         return courses
+    }
+
+    /** @param {string} email */
+    async getUserRole(email) {
+        await this._autoImport();
+        const teacher = this._teachersByEmail.get(email);
+        const isAdmin = this.general.admins?.includes(email);
+        return {
+            isAdmin,
+            isTeacher: !!teacher,
+        }
     }
 
     async _autoImport() {

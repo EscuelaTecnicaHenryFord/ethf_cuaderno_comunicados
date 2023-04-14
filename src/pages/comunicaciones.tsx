@@ -9,14 +9,14 @@ import Communications from "~/lib/components/Communications";
 
 const Home: NextPage = () => {
   const { data: courses } = api.getCourses.useQuery()
-  const { data: communications } = api.getCommunications.useQuery({ mineOnly: true })
+  const { data: communications } = api.getCommunications.useQuery({ mineOnly: false })
 
   const mainMenu = useMainMenu(courses)
 
   return (
     <>
       <Head>
-        <title>Mis comunicaciones</title>
+        <title>Todas las comunicaciones</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Layout
@@ -24,7 +24,7 @@ const Home: NextPage = () => {
         menu={mainMenu}
         nav={[]}
       >
-        <h1 className="text-lg">Mis comunicaciones</h1>
+        <h1 className="text-xl">Todas las comunicaciones</h1>
         <Link
           href="/nueva-comunicacion"
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded my-2 text-center mb-2"
@@ -32,7 +32,7 @@ const Home: NextPage = () => {
           Nueva comunicación
         </Link>
         {communications?.length === 0 && <p>
-          No has hecho ninguna comunicación
+          No hay ninguna comunicación
         </p>}
         {communications && <Communications communications={communications} />}
       </Layout>

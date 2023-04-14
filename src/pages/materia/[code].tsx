@@ -12,7 +12,7 @@ const Home: NextPage = () => {
     const router = useRouter()
     const code = router.query.code?.toString()
     const { data: subject } = api.getSubject.useQuery(code || '', { enabled: !!code })
-    const { data: communications } = api.getMyCommunications.useQuery()
+    const { data: communications } = api.getCommunications.useQuery()
 
     const filteredCommunications = useMemo(() => {
         return communications?.filter(communication => communication.subjectCode === code)
