@@ -5,14 +5,16 @@ import { api } from "~/utils/api";
 import Layout from "~/lib/layout";
 import { mainMenu } from "~/lib/menus";
 import Link from "next/link";
+import Communications from "~/lib/components/Communications";
 
 const Home: NextPage = () => {
   const { data: courses } = api.getCourses.useQuery()
+  const { data: communications } = api.getMyCommunications.useQuery()
 
   return (
     <>
       <Head>
-        <title>Cuaderno de comunicados</title>
+        <title>Mis comunicaciones</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Layout
@@ -20,12 +22,7 @@ const Home: NextPage = () => {
         menu={mainMenu(courses)}
         nav={[]}
       >
-        <Link
-          href="/nueva-comunicacion"
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded my-2 text-center"
-        >
-          Nueva comunicación
-        </Link>
+        {communications && <Communications communications={communications} />}
       </Layout>
     </>
   );

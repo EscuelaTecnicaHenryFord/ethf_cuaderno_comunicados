@@ -3,6 +3,13 @@ import { z } from "zod";
 import { env } from "./env.mjs";
 import path from 'path'
 
+const minCourse = 1
+const maxCourse = 7
+
+export const generalSettingsSchema = z.object({
+    messages: z.array(z.string()),
+})
+
 export const teacherSchema = z.object({
     name: z.string(),
     email: z.string().email(),
@@ -20,7 +27,7 @@ export const subjectSchema = z.object({
     name: z.string(),
     code: z.string(),
     teachers: z.array(z.string()),
-    courseYear: z.number().int().min(1).max(7),
+    courseYear: z.number().int().min(minCourse).max(maxCourse),
 })
 
 export class Settings {
@@ -30,6 +37,10 @@ export class Settings {
     students = [];
     /** @type {z.infer<typeof subjectSchema>[]} */
     subjects = [];
+    /** @type {z.infer<typeof generalSettingsSchema>} */
+    general = {
+        messages: []
+    }
 
     /** @type {Map<string, z.infer<typeof studentSchema>>} */
     _studentsByEnrolment = new Map();
@@ -37,6 +48,8 @@ export class Settings {
     _teachersByEmail = new Map();
     /** @type {Map<string, z.infer<typeof subjectSchema>>} */
     _subjectsByCode = new Map();
+    /** @type {Map<string, z.infer<typeof subjectSchema>[]>} */
+    _subjectsByTeacher = new Map();
 
     _dataImported = false;
 
@@ -53,10 +66,10 @@ export class Settings {
 
         /** @type {Array<z.infer<typeof teacherSchema>>} */
         const result = []
-        if(subject) {
-            for(const email of subject.teachers) {
+        if (subject) {
+            for (const email of subject.teachers) {
                 const teacher = this._teachersByEmail.get(email);
-                if(teacher) {
+                if (teacher) {
                     result.push(teacher);
                 }
             }
@@ -79,40 +92,72 @@ export class Settings {
     /** @param {string} enrolment */
     async getStudentByEnrolment(enrolment) {
         await this._autoImport();
-        return this._studentsByEnrolment.get(enrolment);
+        return this._studentsByEnrolment.get(enrolment.toLowerCase());
+    }
+
+    /** @param {string} email */
+    async getSubjectsOf(email) {
+        await this._autoImport();
+        return this._subjectsByTeacher.get(email) || [];
+    }
+
+    /** @param {string} code */
+    async getSubject(code) {
+        await this._autoImport();
+        return this._subjectsByCode.get(code);
+    }
+
+    async getMessages() {
+        await this._autoImport();
+        return this.general.messages;
     }
 
     async importData() {
-        const importedTeachers = (await readFile(path.join(env.SETTINGS_PATH, 'teachers.json'), 'utf-8')).toString();
-        const importedStudents = (await readFile(path.join(env.SETTINGS_PATH, 'students.json'), 'utf-8')).toString();
-        const importedSubjects = (await readFile(path.join(env.SETTINGS_PATH, 'subjects.json'), 'utf-8')).toString();
+        try {
+            const importedTeachers = JSON.parse((await readFile(path.join(env.SETTINGS_PATH, 'teachers.json'), 'utf-8')).toString());
+            const importedStudents = JSON.parse((await readFile(path.join(env.SETTINGS_PATH, 'students.json'), 'utf-8')).toString());
+            const importedSubjects = JSON.parse((await readFile(path.join(env.SETTINGS_PATH, 'subjects.json'), 'utf-8')).toString());
+            const importedGeneral = JSON.parse((await readFile(path.join(env.SETTINGS_PATH, 'general.json'), 'utf-8')).toString());
 
-        const result1 = await z.array(teacherSchema).safeParseAsync(importedTeachers);
-        if (result1.success) {
-            this.teachers = result1.data;
-        } else {
-            this._errorImporting();
+            this.teachers = await z.array(teacherSchema).parseAsync(importedTeachers);
+
+            this.students = await z.array(studentSchema).parseAsync(importedStudents);
+
+            this.subjects = await z.array(subjectSchema).parseAsync(importedSubjects);
+
+            this.general = await generalSettingsSchema.parseAsync(importedGeneral);
+        } catch (error) {
+            console.error("Error importing data", error);
+            throw new Error('Error importing data');
         }
 
-        const result2 = await z.array(studentSchema).safeParseAsync(importedStudents);
-        if (result2.success) {
-            this.students = result2.data;
-        } else {
-            this._errorImporting();
-        }
 
-        const result3 = await z.array(subjectSchema).safeParseAsync(importedSubjects);
-        if (result3.success) {
-            this.subjects = result3.data;
-        } else {
-            this._errorImporting();
-        }
-
-        this.students.forEach(student => this._studentsByEnrolment.set(student.enrolment, student));
+        this.students.forEach(student => this._studentsByEnrolment.set(student.enrolment.toLowerCase(), student));
         this.teachers.forEach(teacher => this._teachersByEmail.set(teacher.email, teacher));
         this.subjects.forEach(subject => this._subjectsByCode.set(subject.code, subject));
 
+        for(const subject of this.subjects) {
+            for(const teacherEmail of subject.teachers) {
+                const teacherSubjects = this._subjectsByTeacher.get(teacherEmail) || [];
+                teacherSubjects.push(subject);
+                this._subjectsByTeacher.set(teacherEmail, teacherSubjects);
+            }
+        }
+
         this._dataImported = true
+    }
+
+    getCourses() {
+        const courses = []
+        for (let i = minCourse; i <= maxCourse; i++) {
+            courses.push({
+                year: i,
+                get label() {
+                    return `${i}° año`
+                }
+            })
+        }
+        return courses
     }
 
     async _autoImport() {
