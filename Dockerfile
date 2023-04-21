@@ -1,16 +1,12 @@
-##### DEPENDENCIES
-
-FROM --platform=linux/amd64 node:16-alpine3.17 AS deps
-RUN apk add --no-cache libc6-compat openssl1.1-compat
+FROM node:16-alpine3.17
 WORKDIR /app
 
-# Install Prisma Client - remove if not using Prisma
+ENV NODE_ENV production
 
 COPY prisma ./
 
-# Install dependencies based on the preferred package manager
-
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml\* ./
+
 
 RUN \
  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
@@ -19,17 +15,7 @@ RUN \
  else echo "Lockfile not found." && exit 1; \
  fi
 
-##### BUILDER
-
-FROM --platform=linux/amd64 node:16-alpine3.17 AS builder
-ARG DATABASE_URL=file:/database/db.sqlite
-ARG SETTINGS_PATH=/settings
-ARG DATA_PATH=/data
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# ENV NEXT_TELEMETRY_DISABLED 1
 
 RUN \
  if [ -f yarn.lock ]; then SKIP_ENV_VALIDATION=1 yarn build; \
@@ -38,30 +24,6 @@ RUN \
  else echo "Lockfile not found." && exit 1; \
  fi
 
-##### RUNNER
-
-FROM --platform=linux/amd64 node:16-alpine3.17 AS runner
-WORKDIR /app
-
-ENV NODE_ENV production
-ENV DATABASE_URL=file:/database/db.sqlite
-ENV SETTINGS_PATH=/settings
-ENV DATA_PATH=/data
-
-# ENV NEXT_TELEMETRY_DISABLED 1
-
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-COPY --from=builder /app/next.config.mjs ./
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/package.json ./package.json
-
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
 EXPOSE 3000
-ENV PORT 3000
 
-CMD npx prisma db push && node server.js
+CMD npx prisma db push && npm run start
