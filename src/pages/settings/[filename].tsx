@@ -38,7 +38,7 @@ const Home: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Todas las comunicaciones</title>
+        <title>Config: {filename}</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Layout
