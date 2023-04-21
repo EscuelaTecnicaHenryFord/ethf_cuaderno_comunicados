@@ -72,7 +72,27 @@ export const appRouter = createTRPCRouter({
       teacher: await settings.getTeacher(communication.teacherEmail),
       isMine: communication.teacherEmail === ctx.session.user.email,
     })));
-  })
+  }),
+  getFile: protectedProcedure.input(z.string().regex(/^([a-zA-Z0-9\_\-]+\.)*[a-zA-Z0-9\_\-]+$/)).query(async ({ ctx, input }) => {
+    if (!ctx.session.user.email) throw new Error('No email found in session');
+    const role = await settings.getUserRole(ctx.session.user.email || '');
+
+    if(!role.isAdmin) return ""
+
+    return await settings.getFile(input);
+  }),
+  saveFile: protectedProcedure.input(z.object({
+    filename: z.string().regex(/^([a-zA-Z0-9\_\-]+\.)*[a-zA-Z0-9\_\-]+$/),
+    content: z.string(),
+  })).mutation(async ({ ctx, input }) => {
+    if (!ctx.session.user.email) throw new Error('No email found in session');
+    const role = await settings.getUserRole(ctx.session.user.email || '');
+
+    if(!role.isAdmin) return false
+
+    await settings.saveFile(input.filename, input.content);
+    await settings.importData();
+  }),
 });
 
 // export type definition of API

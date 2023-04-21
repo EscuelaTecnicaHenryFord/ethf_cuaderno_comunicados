@@ -1,4 +1,4 @@
-import { readFile } from "fs/promises";
+import { readFile, writeFile } from "fs/promises";
 import { z } from "zod";
 import { env } from "./env.mjs";
 import path from 'path'
@@ -103,7 +103,7 @@ export class Settings {
         /** @type {Array<z.infer<typeof subjectSchema>>} */
         const result = []
         for (const subject of list) {
-            if(!subject) continue
+            if (!subject) continue
             result.push(subject);
         }
         return result
@@ -128,10 +128,10 @@ export class Settings {
 
     async importData() {
         try {
-            const importedTeachers = JSON.parse((await readFile(path.join(env.SETTINGS_PATH, 'teachers.json'), 'utf-8')).toString());
-            const importedStudents = JSON.parse((await readFile(path.join(env.SETTINGS_PATH, 'students.json'), 'utf-8')).toString());
-            const importedSubjects = JSON.parse((await readFile(path.join(env.SETTINGS_PATH, 'subjects.json'), 'utf-8')).toString());
-            const importedGeneral = JSON.parse((await readFile(path.join(env.SETTINGS_PATH, 'general.json'), 'utf-8')).toString());
+            const importedTeachers = JSON.parse(await this.getFile('teachers.json'));
+            const importedStudents = JSON.parse(await this.getFile('students.json'));
+            const importedSubjects = JSON.parse(await this.getFile('subjects.json'));
+            const importedGeneral = JSON.parse(await this.getFile('general.json'));
 
             this.teachers = await z.array(teacherSchema).parseAsync(importedTeachers);
 
@@ -191,6 +191,28 @@ export class Settings {
 
     _errorImporting() {
         throw new Error('Error importing data');
+    }
+
+    /** @param {string} name */
+    async getFile(name) {
+        return (await readFile(path.join(env.SETTINGS_PATH, name), 'utf-8')).toString()
+    }
+
+    /**
+     * @param {string} name 
+     * @param {string} data 
+    */
+    async saveFile(name, data) {
+        const names = [
+            'teachers.json',
+            'students.json',
+            'subjects.json',
+            'general.json',
+        ]
+
+        if(!names.includes(name)) throw new Error('Invalid file name')
+
+        await writeFile(path.join(env.SETTINGS_PATH, name), data)
     }
 }
 

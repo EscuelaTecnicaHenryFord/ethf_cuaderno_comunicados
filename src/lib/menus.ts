@@ -47,6 +47,10 @@ export const mainMenu = (courses: RouterOutputs['getCourses'] | undefined, role:
         label: 'Comunicaciones',
         href: '/comunicaciones',
     },] : []),
+    ...(role.isAdmin ? [{
+        label: 'Configuración',
+        href: '/settings/general.json',
+    },] : []),
     ...courses?.map(course => ({
         label: course.label,
         href: `/curso/${course.year}`,
