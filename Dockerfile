@@ -38,6 +38,8 @@ RUN \
  else echo "Lockfile not found." && exit 1; \
  fi
 
+RUN npx prisma db push
+
 ##### RUNNER
 
 FROM --platform=linux/amd64 node:16-alpine3.17 AS runner
