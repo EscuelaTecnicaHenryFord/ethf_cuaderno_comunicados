@@ -64,4 +64,4 @@ USER nextjs
 EXPOSE 3000
 ENV PORT 3000
 
-CMD npx prisma db pus && node server.js
+CMD npm i -g prisma && npx prisma db push && node server.js
