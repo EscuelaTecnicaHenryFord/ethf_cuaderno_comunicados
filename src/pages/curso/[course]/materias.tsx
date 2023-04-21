@@ -34,6 +34,7 @@ const Home: NextPage = () => {
                     <p>{subject.courseYear}° año</p>
                     <p>{subject.name}</p>
                 </Link>))}
+                <div className="h-5 w-2"></div>
             </Layout >
         </>
     );
