@@ -38,8 +38,6 @@ RUN \
  else echo "Lockfile not found." && exit 1; \
  fi
 
-RUN npx prisma db push
-
 ##### RUNNER
 
 FROM --platform=linux/amd64 node:16-alpine3.17 AS runner
@@ -66,4 +64,4 @@ USER nextjs
 EXPOSE 3000
 ENV PORT 3000
 
-CMD ["node", "server.js"]
+CMD npx prisma db pus && node server.js
