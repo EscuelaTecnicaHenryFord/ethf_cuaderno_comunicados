@@ -11,7 +11,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 const Home: NextPage = () => {
-  const { data: courses } = api.getCourses.useQuery()
+  const { data: courses } = api.getCourses.useQuery(undefined, { cacheTime: 0, refetchOnWindowFocus: false, refetchOnMount: false, refetchOnReconnect: false })
 
   const router = useRouter()
 
