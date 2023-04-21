@@ -15,7 +15,7 @@ export default function Select({
   }[]
 }) {
   return (
-    <Listbox value={value} by="id" onChange={opt => onChange(opt.value)} as={'div'} className={'w-full relative mb-1'}>
+    <Listbox value={{value}} by="id" onChange={opt => onChange(opt.value)} as={'div'} className={'w-full relative mb-1'}>
       <Listbox.Button as='div' className="w-full">
         <div className='border p-2 rounded-md text-left w-full'>
           {options.find(opt => opt.value === value)?.label || 'Seleccionar ...'}
