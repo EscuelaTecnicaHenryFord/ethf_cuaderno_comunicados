@@ -1,4 +1,4 @@
-import { useUserRole } from "~/pages/util/useUserRole";
+import { useUserRole } from "~/lib/util/useUserRole";
 import type { RouterOutputs } from "~/utils/api";
 
 export const coursesSubMenu = (year: number, code: string | undefined, role: ReturnType<typeof useUserRole>) => [

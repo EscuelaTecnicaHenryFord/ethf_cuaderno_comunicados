@@ -5,7 +5,7 @@ import { api } from "~/utils/api";
 import Layout from "~/lib/layout";
 import { useMainMenu } from "~/lib/menus";
 import Link from "next/link";
-import { useUserRole } from "./util/useUserRole";
+import { useUserRole } from "../lib/util/useUserRole";
 import { signIn, signOut, useSession } from "next-auth/react";
 
 const Home: NextPage = () => {
