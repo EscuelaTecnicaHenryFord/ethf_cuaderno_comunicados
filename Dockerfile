@@ -2,6 +2,9 @@ FROM node:16-alpine3.17
 WORKDIR /app
 
 ENV NODE_ENV production
+ENV DATABASE_URL=file:/database/db.sqlite
+ENV SETTINGS_PATH=/settings
+ENV DATA_PATH=/data
 
 COPY prisma ./
 
@@ -19,7 +22,6 @@ COPY . .
 
 RUN \
  if [ -f yarn.lock ]; then SKIP_ENV_VALIDATION=1 yarn build; \
- elif [ -f package-lock.json ]; then SKIP_ENV_VALIDATION=1 npm run build; \
  elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && SKIP_ENV_VALIDATION=1 pnpm run build; \
  else echo "Lockfile not found." && exit 1; \
  fi
