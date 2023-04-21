@@ -133,19 +133,24 @@ export class Settings {
             const importedSubjects = JSON.parse(await this.getFile('subjects.json'));
             const importedGeneral = JSON.parse(await this.getFile('general.json'));
 
-            this.teachers = await z.array(teacherSchema).parseAsync(importedTeachers);
+            const teachers = await z.array(teacherSchema).parseAsync(importedTeachers);
 
-            this.students = await z.array(studentSchema).parseAsync(importedStudents);
+            const students = await z.array(studentSchema).parseAsync(importedStudents);
 
-            this.subjects = await z.array(subjectSchema).parseAsync(importedSubjects);
+            const subjects = await z.array(subjectSchema).parseAsync(importedSubjects);
 
-            this.general = await generalSettingsSchema.parseAsync(importedGeneral);
+            const general = await generalSettingsSchema.parseAsync(importedGeneral);
+
+            this.reset()
+
+            this.teachers = teachers;
+            this.students = students;
+            this.subjects = subjects;
+            this.general = general;
         } catch (error) {
             console.error("Error importing data", error);
             throw new Error('Error importing data');
         }
-
-        this.reset()
 
         this.students.forEach(student => this._studentsByEnrolment.set(student.enrolment.toLowerCase(), student));
         this.teachers.forEach(teacher => this._teachersByEmail.set(teacher.email, teacher));
