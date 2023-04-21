@@ -186,7 +186,7 @@ export class Settings {
     }
 
     async _autoImport() {
-        if (!this._dataImported) await this.importData();
+        if (!this._dataImported || env.NODE_ENV === 'development') await this.importData();
     }
 
     _errorImporting() {

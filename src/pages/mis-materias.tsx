@@ -24,6 +24,7 @@ const Home: NextPage = () => {
         menu={mainMenu}
         nav={[]}
       >
+        {subjects?.length === 0 && <p>No hay materias</p>}
         {subjects?.map(subject => (<Link key={subject.code}
           className="grid grid-cols-[75px,1fr] gap-4] p-2 px-4 hover:bg-gray-100 rounded-md border mt-2"
           href={`/materia/${subject.code}`}

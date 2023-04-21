@@ -19,8 +19,9 @@ export default function Communications(props: Props) {
           >
             {communication.studentEnrolment} - {communication.student?.name || '<sin nombre>'} ({communication.student?.coursingYear}°)
           </Link>
+          <p className="text-sm text-gray-500 font-bold">En la clase de {communication.subject?.name}:</p>
           <p>{communication.message}</p>
-          <p className="text-sm font-bold">{communication.timestamp.toLocaleString()}</p>
+          <p className="text-sm font-bold my-1 text-green-600">{communication.timestamp.toLocaleString()}</p>
           <p>{communication.comment}</p>
         </div>
       ))}
