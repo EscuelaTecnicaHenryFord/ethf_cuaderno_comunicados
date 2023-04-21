@@ -22,8 +22,9 @@ RUN \
 ##### BUILDER
 
 FROM --platform=linux/amd64 node:16-alpine3.17 AS builder
-ARG DATABASE_URL
-ARG NEXT_PUBLIC_CLIENTVAR
+ARG DATABASE_URL=file:/database/db.sqlite
+ARG SETTINGS_PATH=/settings
+ARG DATA_PATH=/data
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -43,6 +44,9 @@ FROM --platform=linux/amd64 node:16-alpine3.17 AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
+ENV DATABASE_URL=file:/database/db.sqlite
+ENV SETTINGS_PATH=/settings
+ENV DATA_PATH=/data
 
 # ENV NEXT_TELEMETRY_DISABLED 1
 
