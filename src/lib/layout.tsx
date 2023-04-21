@@ -1,6 +1,6 @@
 import { signIn, useSession } from "next-auth/react"
+import Image from "next/image"
 import Link from "next/link"
-import iconSVG from '../../public/icon.svg'
 
 interface Props {
     children: React.ReactNode
@@ -50,7 +50,7 @@ export default function AuthedLayout({ title, children, menu, nav }: Props) {
                 className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded my-2 text-center"
                 onClick={e => {
                     e.preventDefault()
-                    signIn('azure-ad')
+                    void signIn('azure-ad')
                 }}
             >
                 Ingresar al sistema
@@ -76,7 +76,7 @@ function Layout({ title, children, menu, nav }: Props) {
                         {/* <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-command">
                             <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"></path>
                         </svg> */}
-                        <img src={iconSVG.src} alt="" width={24} height={24} />
+                        <Image src='/icon.svg' alt="" width={24} height={24} />
                         <span className="hidden font-bold sm:inline-block">Cuaderno</span>
                     </Link>
                     <nav className="hidden gap-6 md:flex">

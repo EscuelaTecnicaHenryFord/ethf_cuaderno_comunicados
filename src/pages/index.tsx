@@ -34,12 +34,12 @@ const Home: NextPage = () => {
           <div className="flex gap-2">
             <Link href="/api/auth/signin/azure-ad" className="block text-blue-500" onClick={e => {
               e.preventDefault()
-              signIn('azure-ad')
+              void signIn('azure-ad')
             }}>Cambiar cuenta</Link>
             <Link href="/api/auth/signout" className="block text-blue-500"
               onClick={e => {
                 e.preventDefault()
-                signOut()
+                void signOut()
               }}
             >Salir</Link>
           </div>
