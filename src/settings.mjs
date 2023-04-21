@@ -145,6 +145,7 @@ export class Settings {
             throw new Error('Error importing data');
         }
 
+        this.reset()
 
         this.students.forEach(student => this._studentsByEnrolment.set(student.enrolment.toLowerCase(), student));
         this.teachers.forEach(teacher => this._teachersByEmail.set(teacher.email, teacher));
@@ -191,6 +192,22 @@ export class Settings {
 
     _errorImporting() {
         throw new Error('Error importing data');
+    }
+
+    reset() {
+        this.teachers = [];
+        this.students = [];
+        this.subjects = [];
+        this.general = {
+            messages: []
+        };
+
+        this._studentsByEnrolment = new Map();
+        this._teachersByEmail = new Map();
+        this._subjectsByCode = new Map();
+        this._subjectsByTeacher = new Map();
+
+        this._dataImported = false;
     }
 
     /** @param {string} name */
