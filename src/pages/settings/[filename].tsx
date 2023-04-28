@@ -43,14 +43,35 @@ const Home: NextPage = () => {
       </Head>
       <Layout
         title="Inicio"
-        menu={mainMenu}
+        menu={[
+          {
+            href: '/',
+            label: 'Inicio',
+          },
+          {
+            href: '/settings/general.json',
+            label: 'General',
+          },
+          {
+            href: '/settings/teachers.json',
+            label: 'Docentes',
+          },
+          {
+            href: '/settings/students.json',
+            label: 'Estudiantes',
+          },
+          {
+            href: '/settings/subjects.json',
+            label: 'Materias',
+          },
+        ]}
         nav={[]}
       >
         <div className="flex gap-4">
-          <Link href="/settings/general.json" className="text-sm text-blue-500">General</Link>
+          {/* <Link href="/settings/general.json" className="text-sm text-blue-500">General</Link>
           <Link href="/settings/teachers.json" className="text-sm text-blue-500">Docentes</Link>
           <Link href="/settings/students.json" className="text-sm text-blue-500">Estudiantes</Link>
-          <Link href="/settings/subjects.json" className="text-sm text-blue-500">Materias</Link>
+          <Link href="/settings/subjects.json" className="text-sm text-blue-500">Materias</Link> */}
           <span className="w-full"></span>
           <button className="text-sm text-blue-500" onClick={save}>Guardar</button>
         </div>

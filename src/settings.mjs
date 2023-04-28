@@ -60,6 +60,11 @@ export class Settings {
         return this.students.filter(student => student.coursingYear === year);
     }
 
+    async getAllStudents() {
+        await this._autoImport();
+        return this.students;
+    }
+
     /** @param {string} subjectCode */
     async getTeachersOf(subjectCode) {
         await this._autoImport();
@@ -76,6 +81,11 @@ export class Settings {
             }
         }
         return result;
+    }
+
+    async getAllSubjects() {
+        await this._autoImport();
+        return this.subjects;
     }
 
     /** @param {number} year */
@@ -178,6 +188,11 @@ export class Settings {
             })
         }
         return courses
+    }
+
+    async getTeachers() {
+        await this._autoImport();
+        return this.teachers;
     }
 
     /** @param {string} email */

@@ -1,64 +1,34 @@
-import { type NextPage } from "next";
-import Head from "next/head";
+import { Card, Button, Container, Stack } from '@mui/material';
+import AppBar from '~/lib/components/AppBar';
+import AddIcon from '@mui/icons-material/Add';
+import { useUserRole } from '~/lib/util/useUserRole';
+import { useRouter } from 'next/router';
 
-import { api } from "~/utils/api";
-import Layout from "~/lib/layout";
-import { useMainMenu } from "~/lib/menus";
-import Link from "next/link";
-import { useUserRole } from "../lib/util/useUserRole";
-import { signIn, signOut, useSession } from "next-auth/react";
+export default function Home() {
+    const role = useUserRole()
+    const router = useRouter()
 
-const Home: NextPage = () => {
-  const { data: courses } = api.getCourses.useQuery()
+    return <div>
+        <AppBar />
+        <Container>
+            <Stack spacing={2} sx={{ mt: 1 }}>
+                {(role.isAdmin || role.isTeacher) && <Card>
+                    <Button variant="text" startIcon fullWidth sx={{ p: 2 }} onClick={() => {
+                        void router.push('/nueva-comunicacion')
+                    }}>Registrar nueva comunicación</Button>
+                </Card>}
+                {(role.isAdmin || role.isTeacher) && <Card>
+                    <Button variant="text" startIcon fullWidth sx={{ p: 2 }} onClick={() => {
+                        void router.push('/comunicaciones')
+                    }}>Ver comunicaciones</Button>
+                </Card>}
+                {role.isAdmin && <Card>
+                    <Button variant="text" startIcon fullWidth sx={{ p: 2 }} onClick={() => {
+                        void router.push('/settings/general.json')
+                    }}>Configuración</Button>
+                </Card>}
+            </Stack>
 
-  const role = useUserRole()
-  const { data: session } = useSession()
-
-  const mainMenu = useMainMenu(courses)
-
-  return (
-    <>
-      <Head>
-        <title>Cuaderno de comunicados</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <Layout
-        title="Inicio"
-        menu={mainMenu}
-        nav={[]}
-      >
-        <div className="border rounded-md p-2">
-          <p className="text-md">Ingresaste como {session?.user.email}</p>
-          <p className="text-sm">Docente: {role.isTeacher ? 'SI' : 'NO'}</p>
-          <p className="text-sm">Gestor: {role.isAdmin ? 'SI' : 'NO'}</p>
-          <div className="flex gap-2">
-            <Link href="/api/auth/signin/azure-ad" className="block text-blue-500" onClick={e => {
-              e.preventDefault()
-              void signIn('azure-ad')
-            }}>Cambiar cuenta</Link>
-            <Link href="/api/auth/signout" className="block text-blue-500"
-              onClick={e => {
-                e.preventDefault()
-                void signOut()
-              }}
-            >Salir</Link>
-          </div>
-        </div>
-        <Link
-          href="/nueva-comunicacion"
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded my-2 text-center"
-        >
-          Nueva comunicación
-        </Link>
-        {role.isAdmin && <Link
-          href="/comunicaciones"
-          className="border border-blue-500 hover:bg-blue-100 text-blue-500 font-bold py-2 px-4 rounded my-2 text-center"
-        >
-          Comunicaciones
-        </Link>}
-      </Layout>
-    </>
-  );
-};
-
-export default Home
+        </Container>
+    </div>
+}

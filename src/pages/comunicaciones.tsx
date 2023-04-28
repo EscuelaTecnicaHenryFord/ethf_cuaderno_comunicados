@@ -24,6 +24,11 @@ import dayjs from 'dayjs'
 import { Typography } from '@mui/material';
 import DialogActions from '@mui/material/DialogActions';
 import { api } from '~/utils/api';
+import { useMemo } from 'react'
+import { useState } from 'react'
+import IconButton from '@mui/material/IconButton';
+import DeleteIcon from '@mui/icons-material/Delete';
+import Tooltip from '@mui/material/Tooltip';
 
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -31,9 +36,64 @@ import ListItemText from '@mui/material/ListItemText';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import Avatar from '@mui/material/Avatar';
 import { nameInitials, stringAvatar, transformName } from '~/lib/util/nameUtils';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 export default function Communications() {
     const filters = useFilters()
+
+    const [start, end] = filters.values.dateRange || [undefined, undefined]
+
+    const { data: communications } = api.getCommunications.useQuery({
+        mineOnly: false,
+        from: start ? new Date(start) : null,
+        to: end ? new Date(end) : null,
+        student: filters.values.student,
+        subject: filters.values.subject,
+        course: filters.values.course,
+        teacher: filters.values.teacher,
+    })
+
+    const rows = useMemo(() => {
+        if (!communications) return []
+
+        return communications.map(communication => ({
+            id: communication.id,
+            studentName: communication.student?.name || '<no encontrado>',
+            studentEnrolment: communication.student?.enrolment,
+            subjectName: communication.subject?.name ? `${communication.subjectCode} - ${communication.subject?.name}` : communication.subjectCode,
+            message: communication.message,
+            date: dayjs(dayjs(communication.timestamp).valueOf()).format('DD/MM/YYYY'),
+            time: dayjs(dayjs(communication.timestamp).valueOf()).format('HH:ss'),
+            teacherName: communication.teacher?.name || communication.teacherEmail,
+            comment: communication.comment,
+        }))
+    }, [communications])
+
+    const [selection, setSelection] = useState<string[]>([])
+
+    function SelectedOptions() {
+        return <>
+            {selection.length === 1 && <Tooltip title="Abrir seleccionado">
+                <IconButton aria-label="open selected"
+                    onClick={() => {
+                        window.open(`/comunicaciones/${selection[0] || ''}`)
+                    }}
+                >
+                    <OpenInNewIcon color='action' />
+                </IconButton>
+            </Tooltip>}
+
+            {selection.length > 1 && <Tooltip title="Cantidad seleccionados">
+                <Chip label={selection.length} sx={{ fontWeight: 500 }} />
+            </Tooltip>}
+
+            {selection.length >= 1 && <Tooltip title="Eliminar seleccionados">
+                <IconButton aria-label="delete">
+                    <DeleteIcon color='error' />
+                </IconButton>
+            </Tooltip>}
+        </>
+    }
 
     return <div>
         <AppBar />
@@ -52,16 +112,22 @@ export default function Communications() {
                 rows={rows}
                 columns={columns}
                 paginationModel={{ page: 0, pageSize: 5 }}
+                columnVisibilityModel={{ id: false }}
+                // onRowDoubleClick={(row) => {
+                //     row.id && window.open(`/comunicaciones/${row.id}`)
+                // }}
+                onRowSelectionModelChange={s => setSelection(s.map(s => s.toString()))}
                 checkboxSelection
             />
         </Box>
         <Box
             sx={{
+                backgroundColor: 'white',
                 position: 'fixed',
                 bottom: 0,
                 left: 0,
                 right: 180,
-                height: 53,
+                height: 52,
             }}
         >
             <Stack
@@ -72,7 +138,13 @@ export default function Communications() {
                 marginLeft={2}
                 sx={{ display: { lg: 'none' } }}
             >
-                <Button variant="text" startIcon={<TuneIcon />}>FILTRAR</Button>
+                <SelectedOptions />
+                <Tooltip title="Filtrar comunicaciones">
+                    <IconButton aria-label="filter">
+                        <TuneIcon color='primary' />
+                    </IconButton>
+                </Tooltip>
+
             </Stack>
             <Stack
                 spacing={2}
@@ -83,6 +155,8 @@ export default function Communications() {
                 overflow={'auto'}
                 sx={{ display: { sm: 'none', lg: 'flex' } }}
             >
+                <SelectedOptions />
+
 
                 {!filters.values.dateRange && <Chip
                     icon={<AddIcon />}
@@ -93,7 +167,7 @@ export default function Communications() {
                     icon={<CalendarMonthIcon />}
                     label={`${dayjs(filters.values.dateRange[0]).format('DD/MM/YYYY')} - ${dayjs(filters.values.dateRange[1]).format('DD/MM/YYYY')}`}
                     onClick={() => filters.pickers.setOpen.dateRange(true)}
-                    onDelete={() => filters.setters.setDateRange(null)} />}
+                    onDelete={() => void filters.setters.setDateRange(null)} />}
 
 
 
@@ -106,7 +180,7 @@ export default function Communications() {
                     icon={<PeopleIcon />}
                     label={`${filters.values.course}° año`}
                     onClick={() => filters.pickers.setOpen.course(true)}
-                    onDelete={() => filters.setters.setCourse(null)} />}
+                    onDelete={() => void filters.setters.setCourse(null)} />}
 
 
 
@@ -119,7 +193,7 @@ export default function Communications() {
                     icon={<SchoolIcon />}
                     label={`${filters.values.subject}`}
                     onClick={() => filters.pickers.setOpen.subject(true)}
-                    onDelete={() => filters.setters.setSubject(null)} />}
+                    onDelete={() => void filters.setters.setSubject(null)} />}
 
 
 
@@ -132,7 +206,7 @@ export default function Communications() {
                     icon={<FaceIcon />}
                     label="ALMARAZ IGLESIAS, Lola"
                     onClick={() => filters.pickers.setOpen.student(true)}
-                    onDelete={() => filters.setters.setStudent(null)} />}
+                    onDelete={() => void filters.setters.setStudent(null)} />}
 
 
 
@@ -145,45 +219,44 @@ export default function Communications() {
                     icon={<PersonIcon />}
                     label={`${filters.values.teacher}`}
                     onClick={() => filters.pickers.setOpen.teacher(true)}
-                    onDelete={() => filters.setters.setTeacher(null)} />}
+                    onDelete={() => void filters.setters.setTeacher(null)} />}
             </Stack>
         </Box>
     </div>
 }
 
 
+// const columns: GridColDef[] = [
+//     { field: 'id', headerName: 'ID', width: 70, hideable: true, },
+// ]
+
 const columns: GridColDef[] = [
-    { field: 'id', headerName: 'ID', width: 70 },
-    { field: 'firstName', headerName: 'First name', width: 130 },
-    { field: 'lastName', headerName: 'Last name', width: 130 },
-    {
-        field: 'age',
-        headerName: 'Age',
-        type: 'number',
-        width: 90,
-    },
-    {
-        field: 'fullName',
-        headerName: 'Full name',
-        description: 'This column has a value getter and is not sortable.',
-        sortable: false,
-        width: 160,
-        valueGetter: (params: GridValueGetterParams) =>
-            `${params.row.firstName || ''} ${params.row.lastName || ''}`,
-    },
+    { field: 'studentEnrolment', headerName: 'Matrícula', width: 100 },
+    { field: 'studentName', headerName: 'Nombre', width: 190 },
+    { field: 'subjectName', headerName: 'Materia', width: 210 },
+    { field: 'message', headerName: 'Mensaje', width: 350 },
+    { field: 'date', headerName: 'Fecha', width: 100 },
+    { field: 'time', headerName: 'Hora', width: 60 },
+    { field: 'teacherName', headerName: 'Docente', width: 130 },
+    { field: 'comment', headerName: 'Comentario', width: 500 },
+    // {
+    //     field: 'age',
+    //     headerName: 'Age',
+    //     type: 'number',
+    //     width: 90,
+    // },
+    // {
+    //     field: 'fullName',
+    //     headerName: 'Full name',
+    //     description: 'This column has a value getter and is not sortable.',
+    //     sortable: false,
+    //     width: 160,
+    //     valueGetter: (params: GridValueGetterParams) =>
+    //         `${params.row.firstName || ''} ${params.row.lastName || ''}`,
+    // },
+    { field: 'id', width: 20, }
 ];
 
-const rows = [
-    { id: 1, lastName: 'Snow', firstName: 'Jon', age: 35 },
-    { id: 2, lastName: 'Lannister', firstName: 'Cersei', age: 42 },
-    { id: 3, lastName: 'Lannister', firstName: 'Jaime', age: 45 },
-    { id: 4, lastName: 'Stark', firstName: 'Arya', age: 16 },
-    { id: 5, lastName: 'Targaryen', firstName: 'Daenerys', age: null },
-    { id: 6, lastName: 'Melisandre', firstName: null, age: 150 },
-    { id: 7, lastName: 'Clifford', firstName: 'Ferrara', age: 44 },
-    { id: 8, lastName: 'Frances', firstName: 'Rossini', age: 36 },
-    { id: 9, lastName: 'Roxie', firstName: 'Harvey', age: 65 },
-];
 
 function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
     const { data: courses } = api.getCourses.useQuery()
@@ -209,13 +282,13 @@ function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
     const secondCuatrimesterEnd = dayjs('2022-12-31').endOf('day')
 
     const [dateRange, setDateRange] = [filters.values.dateRange, filters.setters.setDateRange]
-    const [start, end] = dateRange?.map<number>(date => date.valueOf()) || [null, null]
+    const [start, end] = dateRange?.map<number>(date => date || 0) || [null, null]
 
     function setStart(value: number) {
-        setDateRange([value, end ?? (value + (1000 * 60 * 60 * 24))])
+        void setDateRange([value, end ?? (value + (1000 * 60 * 60 * 24))])
     }
     function setEnd(value: number) {
-        setDateRange([start ?? (value - (1000 * 60 * 60 * 24)), value])
+        void setDateRange([start ?? (value - (1000 * 60 * 60 * 24)), value])
     }
 
     function closeDateRange() {
@@ -246,11 +319,11 @@ function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
                     <Typography>
                         Mostrar desde
                     </Typography>
-                    <DatePicker value={start ? dayjs(start) : null} onChange={v => v && setStart(v.valueOf())} />
+                    <DatePicker value={start ? dayjs(start) : null} onChange={v => v && setStart(v.valueOf())} format="DD/MM/YYYY" />
                     <Typography className='mt-3'>
                         Mostrar hasta
                     </Typography>
-                    <DatePicker value={end ? dayjs(end) : null} onChange={v => v && setEnd(v.valueOf())} />
+                    <DatePicker value={end ? dayjs(end) : null} onChange={v => v && setEnd(v.valueOf())} format="DD/MM/YYYY" />
                     <Stack
                         className='mt-3'
                         spacing={1}
@@ -258,11 +331,11 @@ function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
                         alignItems="center"
                     >
                         <Chip label="Hoy" onClick={() => {
-                            setDateRange([today.valueOf(), todayEnd.valueOf()])
+                            void setDateRange([today.valueOf(), todayEnd.valueOf()])
                             closeDateRange()
                         }} />
                         <Chip label="Ayer" onClick={() => {
-                            setDateRange([yesterday.valueOf(), yesterdayEnd.valueOf()])
+                            void setDateRange([yesterday.valueOf(), yesterdayEnd.valueOf()])
                             closeDateRange()
                         }} />
                     </Stack>
@@ -273,11 +346,11 @@ function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
                         alignItems="center"
                     >
                         <Chip label="Este mes" onClick={() => {
-                            setDateRange([monthStart.valueOf(), monthEnd.valueOf()])
+                            void setDateRange([monthStart.valueOf(), monthEnd.valueOf()])
                             closeDateRange()
                         }} />
                         <Chip label="Mes pasado" onClick={() => {
-                            setDateRange([lastMonthStart.valueOf(), lastMonthEnd.valueOf()])
+                            void setDateRange([lastMonthStart.valueOf(), lastMonthEnd.valueOf()])
                             closeDateRange()
                         }} />
                     </Stack>
@@ -291,11 +364,11 @@ function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
                         alignItems="center"
                     >
                         <Chip label="Primero" onClick={() => {
-                            setDateRange([firstCuatrimesterStart.valueOf(), firstCuatrimesterEnd.valueOf()])
+                            void setDateRange([firstCuatrimesterStart.valueOf(), firstCuatrimesterEnd.valueOf()])
                             closeDateRange()
                         }} />
                         <Chip label="Segundo" onClick={() => {
-                            setDateRange([secondCuatrimesterStart.valueOf(), secondCuatrimesterEnd.valueOf()])
+                            void setDateRange([secondCuatrimesterStart.valueOf(), secondCuatrimesterEnd.valueOf()])
                             closeDateRange()
                         }} />
                     </Stack>
@@ -303,7 +376,7 @@ function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
             </DialogContent>
             <DialogActions>
                 <Button onClick={() => {
-                    setDateRange(null)
+                    void setDateRange(null)
                     closeDateRange()
                 }} color='error' autoFocus>Borrar</Button>
                 <Button onClick={closeDateRange} autoFocus>Cerrar</Button>
@@ -317,7 +390,7 @@ function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
                     {courses?.map(course => <ListItemButton
                         key={course.year}
                         onClick={() => {
-                            filters.setters.setCourse(course.year)
+                            void filters.setters.setCourse(course.year)
                             closeCourse()
                         }}
                     >
@@ -339,7 +412,7 @@ function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
                     }).map(subject => <ListItemButton
                         key={subject.code}
                         onClick={() => {
-                            filters.setters.setSubject(subject.code)
+                            void filters.setters.setSubject(subject.code)
                             closeSubject()
                         }}
                     >
@@ -361,7 +434,7 @@ function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
                     }).map(student => <ListItemButton
                         key={student.enrolment}
                         onClick={() => {
-                            filters.setters.setStudent(student.enrolment)
+                            void filters.setters.setStudent(student.enrolment)
                             closeStudent()
                         }}
                     >
@@ -400,7 +473,7 @@ function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
                     {teachers?.map(teacher => <ListItemButton
                         key={teacher.email}
                         onClick={() => {
-                            filters.setters.setTeacher(teacher.email)
+                            void filters.setters.setTeacher(teacher.email)
                             closeTeacher()
                         }}
                     >
