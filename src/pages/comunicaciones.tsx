@@ -11,7 +11,7 @@ import AddIcon from '@mui/icons-material/Add';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import SchoolIcon from '@mui/icons-material/School';
 import FaceIcon from '@mui/icons-material/Face';
-import GroupsIcon from '@mui/icons-material/Groups';
+import PeopleIcon from '@mui/icons-material/People';
 import PersonIcon from '@mui/icons-material/Person';
 import { useFilters } from '~/lib/useFilters';
 import Dialog from '@mui/material/Dialog';
@@ -23,6 +23,14 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs'
 import { Typography } from '@mui/material';
 import DialogActions from '@mui/material/DialogActions';
+import { api } from '~/utils/api';
+
+import List from '@mui/material/List';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import Avatar from '@mui/material/Avatar';
+import { nameInitials, stringAvatar, transformName } from '~/lib/util/nameUtils';
 
 export default function Communications() {
     const filters = useFilters()
@@ -95,8 +103,8 @@ export default function Communications() {
                     onClick={() => filters.pickers.setOpen.course(true)}
                 />}
                 {filters.values.course && <Chip
-                    icon={<GroupsIcon />}
-                    label="7° año"
+                    icon={<PeopleIcon />}
+                    label={`${filters.values.course}° año`}
                     onClick={() => filters.pickers.setOpen.course(true)}
                     onDelete={() => filters.setters.setCourse(null)} />}
 
@@ -109,7 +117,7 @@ export default function Communications() {
                 />}
                 {filters.values.subject && <Chip
                     icon={<SchoolIcon />}
-                    label="Matemática"
+                    label={`${filters.values.subject}`}
                     onClick={() => filters.pickers.setOpen.subject(true)}
                     onDelete={() => filters.setters.setSubject(null)} />}
 
@@ -135,7 +143,7 @@ export default function Communications() {
                 />}
                 {filters.values.teacher && <Chip
                     icon={<PersonIcon />}
-                    label="Tomás Cichero"
+                    label={`${filters.values.teacher}`}
                     onClick={() => filters.pickers.setOpen.teacher(true)}
                     onDelete={() => filters.setters.setTeacher(null)} />}
             </Stack>
@@ -178,6 +186,11 @@ const rows = [
 ];
 
 function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
+    const { data: courses } = api.getCourses.useQuery()
+    const { data: subjects } = api.getAllSubjects.useQuery()
+    const { data: students } = api.getAllStudents.useQuery()
+    const { data: teachers } = api.getTeachers.useQuery()
+
     const today = dayjs().startOf('day')
     const todayEnd = dayjs().endOf('day')
 
@@ -209,6 +222,22 @@ function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
         filters.pickers.setOpen.dateRange(false)
     }
 
+    function closeCourse() {
+        filters.pickers.setOpen.course(false)
+    }
+
+    function closeSubject() {
+        filters.pickers.setOpen.subject(false)
+    }
+
+    function closeStudent() {
+        filters.pickers.setOpen.student(false)
+    }
+
+    function closeTeacher() {
+        filters.pickers.setOpen.teacher(false)
+    }
+
     return <React.Fragment>
         <Dialog open={filters.pickers.open.dateRange} onClose={() => filters.pickers.setOpen.dateRange(false)}>
             <DialogTitle>Mostrar rango</DialogTitle>
@@ -217,7 +246,7 @@ function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
                     <Typography>
                         Mostrar desde
                     </Typography>
-                    <DatePicker value={start ? dayjs(start) : null} onChange={v => v && setStart(v.valueOf())}/>
+                    <DatePicker value={start ? dayjs(start) : null} onChange={v => v && setStart(v.valueOf())} />
                     <Typography className='mt-3'>
                         Mostrar hasta
                     </Typography>
@@ -247,7 +276,7 @@ function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
                             setDateRange([monthStart.valueOf(), monthEnd.valueOf()])
                             closeDateRange()
                         }} />
-                        <Chip label="Este mes" onClick={() => {
+                        <Chip label="Mes pasado" onClick={() => {
                             setDateRange([lastMonthStart.valueOf(), lastMonthEnd.valueOf()])
                             closeDateRange()
                         }} />
@@ -282,19 +311,125 @@ function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
         </Dialog>
 
         <Dialog open={filters.pickers.open.course} onClose={() => filters.pickers.setOpen.course(false)}>
-            Curso
+            <Box sx={{ width: 250, maxWidth: '100%' }}>
+                <DialogTitle>Curso</DialogTitle>
+                <List>
+                    {courses?.map(course => <ListItemButton
+                        key={course.year}
+                        onClick={() => {
+                            filters.setters.setCourse(course.year)
+                            closeCourse()
+                        }}
+                    >
+                        <ListItemText className='ml-2' primary={course.label} />
+                    </ListItemButton>)}
+                </List>
+            </Box>
         </Dialog>
 
         <Dialog open={filters.pickers.open.subject} onClose={() => filters.pickers.setOpen.subject(false)}>
-            Materia
+            <Box sx={{ width: 250, maxWidth: '100%' }}>
+                <DialogTitle>Materia</DialogTitle>
+                <List>
+                    {subjects?.filter(s => {
+                        if (filters.values.course) {
+                            return s.courseYear === filters.values.course
+                        }
+                        return true
+                    }).map(subject => <ListItemButton
+                        key={subject.code}
+                        onClick={() => {
+                            filters.setters.setSubject(subject.code)
+                            closeSubject()
+                        }}
+                    >
+                        <ListItemText className='ml-2' primary={`${subject.courseYear}° - ${subject.name}`} />
+                    </ListItemButton>)}
+                </List>
+            </Box>
         </Dialog>
 
         <Dialog open={filters.pickers.open.student} onClose={() => filters.pickers.setOpen.student(false)}>
-            Estudiante
+            <Box sx={{ width: 450, maxWidth: '100%' }}>
+                <DialogTitle>Estudiantes</DialogTitle>
+                <List>
+                    {students?.filter(s => {
+                        if (filters.values.course) {
+                            return s.coursingYear === filters.values.course
+                        }
+                        return true
+                    }).map(student => <ListItemButton
+                        key={student.enrolment}
+                        onClick={() => {
+                            filters.setters.setStudent(student.enrolment)
+                            closeStudent()
+                        }}
+                    >
+                        <ListItemAvatar
+                            className='ml-2'
+                        >
+                            <Avatar {...stringAvatar(student.name)}>
+                                {nameInitials(transformName(student.name))}
+                            </Avatar>
+                        </ListItemAvatar>
+                        <ListItemText
+                            primary={student.name}
+                            secondary={
+                                <React.Fragment>
+                                    <Typography
+                                        sx={{ display: 'inline' }}
+                                        component="span"
+                                        variant="body2"
+                                        color="text.primary"
+                                    >
+                                        {student.enrolment}
+                                    </Typography>
+                                    {" — "}{student.coursingYear}° año
+                                </React.Fragment>
+                            }
+                        />
+                    </ListItemButton>)}
+                </List>
+            </Box>
         </Dialog>
 
         <Dialog open={filters.pickers.open.teacher} onClose={() => filters.pickers.setOpen.teacher(false)}>
-            Docente
+            <Box sx={{ width: 450, maxWidth: '100%' }}>
+                <DialogTitle>Docentes</DialogTitle>
+                <List>
+                    {teachers?.map(teacher => <ListItemButton
+                        key={teacher.email}
+                        onClick={() => {
+                            filters.setters.setTeacher(teacher.email)
+                            closeTeacher()
+                        }}
+                    >
+                        <ListItemAvatar
+                            className='ml-2'
+                        >
+                            <Avatar {...stringAvatar(teacher.name)}>
+                                {nameInitials(teacher.name)}
+                            </Avatar>
+                        </ListItemAvatar>
+                        <ListItemText
+                            primary={teacher.name}
+                            secondary={
+                                <React.Fragment>
+                                    <Typography
+                                        sx={{ display: 'inline' }}
+                                        component="span"
+                                        variant="body2"
+                                        color="text.primary"
+                                    >
+                                        {teacher.email}
+                                    </Typography>
+                                    {/* {" — "}lorem ipsum */}
+                                </React.Fragment>
+                            }
+                        />
+                    </ListItemButton>)}
+                </List>
+            </Box>
         </Dialog>
     </React.Fragment>
 
