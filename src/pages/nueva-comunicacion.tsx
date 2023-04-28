@@ -231,13 +231,15 @@ export default function NewCommunication() {
                             </div>}
                         </Grid>
                     </Grid>
-                    <Button fullWidth variant='outlined' className='mt-3' disabled={!ready || loading}
-                        onClick={() => {
-                            if (ready && !loading) void save()
-                        }}
-                    >
-                        {loading ? 'Registrando...' : 'Registrar'}
-                    </Button>
+                    <div className='mt-3'>
+                        <Button fullWidth variant='outlined' className='mt-3' disabled={!ready || loading}
+                            onClick={() => {
+                                if (ready && !loading) void save()
+                            }}
+                        >
+                            {loading ? 'Registrando...' : 'Registrar'}
+                        </Button>
+                    </div>
                 </Box>
             </Container>
         </LocalizationProvider>
