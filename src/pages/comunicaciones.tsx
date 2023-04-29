@@ -78,6 +78,7 @@ export function Communications() {
     }, [communications])
 
     const [selection, setSelection] = useState<string[]>([])
+    const [page, setPage] = useState(0)
 
     function SelectedOptions() {
         return <>
@@ -119,7 +120,10 @@ export function Communications() {
                 sx={{ border: 'none' }}
                 rows={rows}
                 columns={columns}
-                paginationModel={{ page: 0, pageSize: 5 }}
+                paginationModel={{ page: page, pageSize: 50 }}
+                onPaginationModelChange={(page) => {
+                    setPage(page.page)
+                }}
                 columnVisibilityModel={{ id: false }}
                 // onRowDoubleClick={(row) => {
                 //     row.id && window.open(`/comunicaciones/${row.id}`)
