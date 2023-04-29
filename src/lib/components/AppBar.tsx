@@ -1,6 +1,7 @@
 import { styled, alpha } from '@mui/material/styles';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
+import Avatar from '@mui/material/Avatar';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
@@ -24,6 +25,7 @@ import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 
 import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
+import { nameInitials, stringAvatar } from '../util/nameUtils';
 
 const Search = styled('div')(({ theme }) => ({
     position: 'relative',
@@ -145,6 +147,17 @@ export default function SearchAppBar() {
                             </ListItemButton>
                         </ListItem>
                     </List>
+                    <Divider />
+                    <List>
+                        <ListItem disablePadding onClick={() => void signOut()}>
+                            <ListItemButton>
+                                <ListItemIcon>
+                                    <ExitToAppIcon />
+                                </ListItemIcon>
+                                <ListItemText primary={"Cerrar sesión"} />
+                            </ListItemButton>
+                        </ListItem>
+                    </List>
                 </Box>
             </Drawer>
 
@@ -169,7 +182,8 @@ export default function SearchAppBar() {
                         >
                             Comunicaciones
                         </Typography>
-                        <IconButton
+                        <Avatar {...stringAvatar(session?.user.name || 'H F')} />
+                        {/* <IconButton
                             size="large"
                             edge="start"
                             color="inherit"
@@ -178,7 +192,7 @@ export default function SearchAppBar() {
                             onClick={() => void signOut()}
                         >
                             <ExitToAppIcon />
-                        </IconButton>
+                        </IconButton> */}
                         {/* <Search>
                             <SearchIconWrapper>
                                 <SearchIcon />
