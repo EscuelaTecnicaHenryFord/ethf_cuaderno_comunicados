@@ -25,8 +25,17 @@ import dayjs from 'dayjs';
 import { nameInitials, stringAvatar, transformName } from '~/lib/util/nameUtils';
 import { useUserRole } from '~/lib/util/useUserRole';
 import { useSession } from 'next-auth/react';
+import ProtectedRoute from '~/lib/ProtectedRoute';
 
-export default function NewCommunication() {
+
+
+export default function NewCommunicationWrapper() {
+    return <ProtectedRoute>
+        <NewCommunication />
+    </ProtectedRoute>
+}
+
+export function NewCommunication() {
     const router = useRouter()
 
     // const courseYear = parseInt(router.query.curso?.toString() || 'NaN') || null

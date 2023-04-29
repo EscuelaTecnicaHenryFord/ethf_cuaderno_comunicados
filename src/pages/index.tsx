@@ -3,8 +3,16 @@ import AppBar from '~/lib/components/AppBar';
 import AddIcon from '@mui/icons-material/Add';
 import { useUserRole } from '~/lib/util/useUserRole';
 import { useRouter } from 'next/router';
+import ProtectedRoute from '~/lib/ProtectedRoute';
 
-export default function Home() {
+
+export default function HomeWrapper() {
+    return <ProtectedRoute>
+        <Home />
+    </ProtectedRoute>
+}
+
+export function Home() {
     const role = useUserRole()
     const router = useRouter()
 

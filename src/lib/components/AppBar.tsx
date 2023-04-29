@@ -136,7 +136,7 @@ export default function SearchAppBar() {
                                 <ListItemText primary={"Nueva comunicación"} />
                             </ListItemButton>
                         </ListItem>
-                        <ListItem disablePadding onClick={() => void router.push('/settings/general.json')}>
+                        <ListItem disablePadding onClick={() => void router.push('/settings')}>
                             <ListItemButton>
                                 <ListItemIcon>
                                     <SettingsIcon />

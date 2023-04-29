@@ -37,8 +37,16 @@ import ListItemAvatar from '@mui/material/ListItemAvatar';
 import Avatar from '@mui/material/Avatar';
 import { nameInitials, stringAvatar, transformName } from '~/lib/util/nameUtils';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import ProtectedRoute from '~/lib/ProtectedRoute';
 
-export default function Communications() {
+
+export default function CommunicationsWrapper() {
+    return <ProtectedRoute>
+        <Communications />
+    </ProtectedRoute>
+}
+
+export function Communications() {
     const filters = useFilters()
 
     const [start, end] = filters.values.dateRange || [undefined, undefined]
