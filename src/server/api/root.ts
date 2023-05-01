@@ -161,6 +161,7 @@ export const appRouter = createTRPCRouter({
       student: await settings.getStudentByEnrolment(result.studentEnrolment),
       subject: await settings.getSubject(result.subjectCode),
       teacher: await settings.getTeacher(result.teacherEmail),
+      color: (await settings.getMessages()).find(message => message.text === result.message)?.sentiment.color || '#000000',
       isMine: result.teacherEmail === ctx.session.user.email,
     };
   }),

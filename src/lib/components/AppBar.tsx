@@ -26,6 +26,7 @@ import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { nameInitials, stringAvatar } from '../util/nameUtils';
+import { useUserRole } from '../util/useUserRole';
 
 const Search = styled('div')(({ theme }) => ({
     position: 'relative',
@@ -72,6 +73,8 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 export default function AppBar() {
     const [open, setOpen] = useState(false);
     const router = useRouter();
+
+    const role = useUserRole()
 
     const { data: session } = useSession();
 
@@ -138,14 +141,14 @@ export default function AppBar() {
                                 <ListItemText primary={"Nueva comunicación"} />
                             </ListItemButton>
                         </ListItem>
-                        <ListItem disablePadding onClick={() => void router.push('/settings')}>
+                        {role.isAdmin && <ListItem disablePadding onClick={() => void router.push('/settings')}>
                             <ListItemButton>
                                 <ListItemIcon>
                                     <SettingsIcon />
                                 </ListItemIcon>
                                 <ListItemText primary={"Configuración"} />
                             </ListItemButton>
-                        </ListItem>
+                        </ListItem>}
                     </List>
                     <Divider />
                     <List>

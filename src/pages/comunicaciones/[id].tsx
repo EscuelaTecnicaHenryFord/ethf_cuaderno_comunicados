@@ -47,17 +47,18 @@ export default function Communication() {
                 </div>
                 <div className="mt-3">
                     <label className="text-sm font-semibold">Mensaje</label>
-                    <h2 className="text-xl">{data.message}</h2>
+                    <h2 className="text-xl" style={{ color: data.color }}>{data.message}</h2>
                 </div>
                 {data.comment && <div className="mt-3">
                     <label className="text-sm font-semibold">Comentario</label>
                     <p className="text-xl">{data.comment}</p>
                 </div>}
             </div>}
+            <hr className="my-2"/>
             {(data && role.isAdmin) && <Button variant="outlined" startIcon={<DeleteIcon />} color="error" className="mt-2"
                 onClick={() => {
                     void deleteCommunications([id]).then(() => {
-                        if(confirm("¿Eliminar comunicación?")) {
+                        if (confirm("¿Eliminar comunicación?")) {
                             void router.push('/comunicaciones')
                         }
                     })

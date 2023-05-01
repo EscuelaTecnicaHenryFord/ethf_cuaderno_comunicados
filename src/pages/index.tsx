@@ -32,7 +32,7 @@ export function Home() {
                 </Card>}
                 {role.isAdmin && <Card>
                     <Button variant="text" startIcon fullWidth sx={{ p: 2 }} onClick={() => {
-                        void router.push('/settings/general.json')
+                        void router.push('/settings')
                     }}>Configuración</Button>
                 </Card>}
             </Stack>
