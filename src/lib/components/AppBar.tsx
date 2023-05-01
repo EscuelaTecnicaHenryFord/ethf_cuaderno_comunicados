@@ -27,6 +27,7 @@ import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { nameInitials, stringAvatar } from '../util/nameUtils';
 import { useUserRole } from '../util/useUserRole';
+import { Chip } from '@mui/material';
 
 const Search = styled('div')(({ theme }) => ({
     position: 'relative',
@@ -114,6 +115,11 @@ export default function AppBar() {
                                 />
                             </ListItemButton>
                         </ListItem>
+                        {role.isAdmin && <ListItem disablePadding>
+                            <div className='flex justify-around w-full pr-5'>
+                                <Chip label="Administrador" variant='outlined' />
+                            </div>
+                        </ListItem>}
                     </List>
                     <Divider />
                     <List>

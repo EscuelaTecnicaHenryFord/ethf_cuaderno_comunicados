@@ -313,8 +313,11 @@ const columns: GridColDef[] = [
 
 
 function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
+    const role = useUserRole()
+
     const { data: courses } = api.getCourses.useQuery()
-    const { data: subjects } = api.getAllSubjects.useQuery()
+    const { data: subjects } = api.getAllSubjects.useQuery(undefined, { enabled: role.isAdmin})
+    const { data: mySubjects } = api.getMySubjects.useQuery(undefined, { enabled: !role.isAdmin})
     const { data: students } = api.getAllStudents.useQuery()
     const { data: teachers } = api.getTeachers.useQuery()
 
@@ -458,7 +461,7 @@ function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
             <Box sx={{ width: 250, maxWidth: '100%' }}>
                 <DialogTitle>Materia</DialogTitle>
                 <List>
-                    {subjects?.filter(s => {
+                    {(mySubjects ?? subjects)?.filter(s => {
                         if (filters.values.course) {
                             return s.courseYear === filters.values.course
                         }

@@ -10,6 +10,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Container from '@mui/material/Container';
 import CircularProgress from '@mui/material/CircularProgress';
 import Head from "next/head";
+import { useRouter } from "next/router";
 
 interface Props {
     children: React.ReactNode
@@ -52,6 +53,8 @@ export default function ProtectedRoute({ children, requiredAdmin, requiredTeache
 }
 
 function NotAllowedRoute() {
+    const router = useRouter()
+
     return <div>
         <Head>
             <title>🚫 Sin permiso</title>
@@ -60,6 +63,9 @@ function NotAllowedRoute() {
         <h1 className="text-center mt-5 font-xl">
             No tienes permiso para ver esta página
         </h1>
+        {(router.pathname != '/') && <center>
+            <Button variant="outlined" className="mt-2 py-3 px-8" onClick={() => void router.push('/')}>Página de inicio</Button>
+        </center>}
     </div>
 }
 
