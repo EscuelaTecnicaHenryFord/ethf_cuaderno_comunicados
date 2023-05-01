@@ -42,25 +42,39 @@ export const appRouter = createTRPCRouter({
   getTeachers: protectedProcedure.query(() => {
     return settings.getTeachers();
   }),
-  createCommunication: protectedProcedure.input(z.object({
+  createCommunications: protectedProcedure.input(z.array(z.object({
     subject: z.string(),
     message: z.string(),
     comment: z.string(),
     student: z.string(),
     timestamp: z.date()
-  })).mutation(async ({ input, ctx }) => {
-    if (!ctx.session.user.email) throw new Error('No email found in session');
+  }))).mutation(async ({ input, ctx }) => {
+    const teacherEmail = ctx.session.user.email;
+    if (!teacherEmail) throw new Error('No email found in session');
 
-    return await ctx.prisma.communication.create({
+    let poolId: string | null = null
+
+    if (input.length > 1) {
+      const pool = await ctx.prisma.communicationsPool.create({
+        data: {
+
+        }
+      })
+      poolId = pool.id
+    }
+
+
+    return await ctx.prisma.$transaction(input.map(item => ctx.prisma.communication.create({
       data: {
-        comment: input.comment,
-        message: input.message,
-        studentEnrolment: input.student,
-        subjectCode: input.subject,
-        timestamp: input.timestamp,
-        teacherEmail: ctx.session.user.email
+        comment: item.comment,
+        message: item.message,
+        studentEnrolment: item.student,
+        subjectCode: item.subject,
+        timestamp: item.timestamp,
+        teacherEmail: teacherEmail,
+        poolId: poolId
       }
-    })
+    })))
   }),
   getCommunications: protectedProcedure.input(z.object({
     mineOnly: z.boolean(),
@@ -91,6 +105,7 @@ export const appRouter = createTRPCRouter({
       student: await settings.getStudentByEnrolment(communication.studentEnrolment),
       subject: await settings.getSubject(communication.subjectCode),
       teacher: await settings.getTeacher(communication.teacherEmail),
+      color: (await settings.getMessages()).find(message => message.text === communication.message)?.sentiment.color || '#000000',
       isMine: communication.teacherEmail === ctx.session.user.email,
     })));
 
@@ -120,6 +135,48 @@ export const appRouter = createTRPCRouter({
 
     await settings.saveFile(input.filename, input.content);
     await settings.importData();
+  }),
+  getCommunication: protectedProcedure.input(z.string()).query(async ({ ctx, input }) => {
+    if (!ctx.session.user.email) throw new Error('No email found in session');
+    const role = await settings.getUserRole(ctx.session.user.email || '');
+
+    const result = await ctx.prisma.communication.findFirst({
+      where: {
+        id: input,
+        teacherEmail: (!role.isAdmin) ? ctx.session.user.email : undefined,
+      },
+      include: {
+        pool: {
+          include: {
+            communications: true
+          }
+        }
+      }
+    })
+
+    if (!result) return null;
+
+    return {
+      ...result,
+      student: await settings.getStudentByEnrolment(result.studentEnrolment),
+      subject: await settings.getSubject(result.subjectCode),
+      teacher: await settings.getTeacher(result.teacherEmail),
+      isMine: result.teacherEmail === ctx.session.user.email,
+    };
+  }),
+  deleteCommunications: protectedProcedure.input(z.array(z.string())).mutation(async ({ ctx, input }) => {
+    if (!ctx.session.user.email) throw new Error('No email found in session');
+    const role = await settings.getUserRole(ctx.session.user.email || '');
+
+    if (!role.isAdmin) return false
+
+    await ctx.prisma.communication.deleteMany({
+      where: {
+        id: {
+          in: input
+        }
+      }
+    })
   }),
 });
 

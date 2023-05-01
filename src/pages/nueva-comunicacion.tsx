@@ -51,7 +51,7 @@ export function NewCommunication() {
     const { data: students } = api.getStudentsOf.useQuery(courseYear || 0, { enabled: !!courseYear })
     const { data: subjects } = api.getSubjectsOfYear.useQuery(courseYear || 0, { enabled: !!courseYear })
     const { data: messages } = api.getMessages.useQuery()
-    const { mutateAsync: saveCommunication } = api.createCommunication.useMutation()
+    const { mutateAsync: createCommunications } = api.createCommunications.useMutation()
 
     const role = useUserRole()
     const { data: session } = useSession()
@@ -73,13 +73,6 @@ export function NewCommunication() {
 
     // remove seconds from time
 
-    const menu = [
-        { label: 'Inicio', href: '/' },
-    ]
-
-    if (subject && subjectCode && subject.courseYear === courseYear) {
-        menu.push({ label: subject.name, href: courseYear ? `/materia/${subjectCode}?curso=${courseYear.toString()}` : `/materia/${subjectCode}` })
-    }
 
     const [loading, setLoading] = useState(false)
 
@@ -96,25 +89,23 @@ export function NewCommunication() {
     async function save() {
         if (!ready || loading) return
         setLoading(true)
-        for (const student of filteredSelectedStudents) {
-            await saveCommunication({
-                subject: subjectCode || '',
-                timestamp: timestamp.toDate(),
-                message: message,
-                comment: comment,
-                student: student?.enrolment || '',
-            }).then(() => {
-                setLoading(false)
-                void router.push({
-                    pathname: '/comunicaciones',
-                    query: {
-                        dateRange: `${timestamp.valueOf() - 1}..${timestamp.valueOf() + 1}`
-                    }
-                })
-            }).catch(() => {
-                setLoading(false)
+        await createCommunications(filteredSelectedStudents.map(student => ({
+            subject: subjectCode || '',
+            timestamp: timestamp.toDate(),
+            message: message,
+            comment: comment,
+            student: student?.enrolment || '',
+        }))).then(() => {
+            setLoading(false)
+            void router.push({
+                pathname: '/comunicaciones',
+                query: {
+                    dateRange: `${timestamp.valueOf() - 1}..${timestamp.valueOf() + 1}`
+                }
             })
-        }
+        }).catch(() => {
+            setLoading(false)
+        })
     }
 
     return <div>
@@ -193,7 +184,7 @@ export function NewCommunication() {
                                             setMessage(value.target.value?.toString() || '')
                                         }}
                                     >
-                                        {messages?.map(message => <MenuItem value={message} key={message}><span className='py-1'>{message}</span></MenuItem>)}
+                                        {messages?.map(message => <MenuItem value={message.text} key={message.text}><span className='py-1' style={{color: message.sentiment.color}}>{message.text}</span></MenuItem>)}
                                     </Select>
                                 </FormControl>
                             </div>

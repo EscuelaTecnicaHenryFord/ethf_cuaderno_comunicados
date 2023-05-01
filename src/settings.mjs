@@ -6,9 +6,30 @@ import path from 'path'
 const minCourse = 1
 const maxCourse = 7
 
-export const generalSettingsSchema = z.object({
-    messages: z.array(z.string()),
+export const compatGeneralSettingsSchema = z.object({
+    messages: z.array(z.string().or(z.object({
+        text: z.string(),
+        sentiment: z.string(),
+    }))),
     admins: z.array(z.string()).optional().nullable(),
+    sentiments: z.array(z.object({
+        name: z.string().optional().nullable(),
+        code: z.string(),
+        color: z.string(),
+    })).optional().nullable(),
+})
+
+export const generalSettingsSchema = z.object({
+    messages: z.array(z.object({
+        text: z.string(),
+        sentiment: z.string(),
+    })),
+    admins: z.array(z.string()).optional().nullable(),
+    sentiments: z.array(z.object({
+        name: z.string().optional().nullable(),
+        code: z.string(),
+        color: z.string(),
+    })),
 })
 
 export const teacherSchema = z.object({
@@ -40,7 +61,9 @@ export class Settings {
     subjects = [];
     /** @type {z.infer<typeof generalSettingsSchema>} */
     general = {
-        messages: []
+        messages: [],
+        admins: [],
+        sentiments: [],
     }
 
     /** @type {Map<string, z.infer<typeof studentSchema>>} */
@@ -127,7 +150,12 @@ export class Settings {
 
     async getMessages() {
         await this._autoImport();
-        return this.general.messages;
+        return this.general.messages.map(message => {
+            return {
+                ...message,
+                sentiment: this.general.sentiments.find(sentiment => sentiment.code === message.sentiment) || { color: 'black', code: 'neutral' },
+            }
+        });
     }
 
     /** @param {string} email */
@@ -149,14 +177,29 @@ export class Settings {
 
             const subjects = await z.array(subjectSchema).parseAsync(importedSubjects);
 
-            const general = await generalSettingsSchema.parseAsync(importedGeneral);
+            const { messages, ...general } = await compatGeneralSettingsSchema.parseAsync(importedGeneral);
 
             this.reset()
+
+            const latestModelMessages = messages.map(message => {
+                if (typeof message === 'string') {
+                    return {
+                        text: message,
+                        sentiment: 'neutral'
+                    }
+                }
+                return message
+            })
 
             this.teachers = teachers;
             this.students = students;
             this.subjects = subjects;
-            this.general = general;
+            this.general = {
+                ...general, messages: latestModelMessages,
+                sentiments: general.sentiments || [
+                    { code: 'neutral', color: 'black' },
+                ]
+            };
         } catch (error) {
             console.error("Error importing data", error);
             throw new Error('Error importing data');
@@ -219,7 +262,11 @@ export class Settings {
         this.students = [];
         this.subjects = [];
         this.general = {
-            messages: []
+            messages: [],
+            sentiments: [
+                { code: 'neutral', color: 'black' },
+            ],
+            admins: [],
         };
 
         this._studentsByEnrolment = new Map();
@@ -247,7 +294,7 @@ export class Settings {
             'general.json',
         ]
 
-        if(!names.includes(name)) throw new Error('Invalid file name')
+        if (!names.includes(name)) throw new Error('Invalid file name')
 
         await writeFile(path.join(env.SETTINGS_PATH, name), data)
     }

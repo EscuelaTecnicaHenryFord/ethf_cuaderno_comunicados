@@ -1,5 +1,5 @@
 import { styled, alpha } from '@mui/material/styles';
-import AppBar from '@mui/material/AppBar';
+import MuiAppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
 import Toolbar from '@mui/material/Toolbar';
@@ -69,7 +69,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
     },
 }));
 
-export default function SearchAppBar() {
+export default function AppBar() {
     const [open, setOpen] = useState(false);
     const router = useRouter();
 
@@ -162,7 +162,7 @@ export default function SearchAppBar() {
             </Drawer>
 
             <Box sx={{ flexGrow: 1, zIndex: 2 }}>
-                <AppBar position="static">
+                <MuiAppBar position="static">
                     <Toolbar>
                         <IconButton
                             size="large"
@@ -203,7 +203,7 @@ export default function SearchAppBar() {
                             />
                         </Search> */}
                     </Toolbar>
-                </AppBar>
+                </MuiAppBar>
             </Box>
         </React.Fragment>
     );

@@ -9,6 +9,7 @@ import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import Container from '@mui/material/Container';
 import CircularProgress from '@mui/material/CircularProgress';
+import Head from "next/head";
 
 interface Props {
     children: React.ReactNode
@@ -40,6 +41,9 @@ export default function ProtectedRoute({ children, requiredAdmin, requiredTeache
 
     if (isAdmin || isTeacher) {
         return <>
+            <Head>
+                <title>Comunicaciones</title>
+            </Head>
             {children}
         </>
     }
@@ -49,6 +53,9 @@ export default function ProtectedRoute({ children, requiredAdmin, requiredTeache
 
 function NotAllowedRoute() {
     return <div>
+        <Head>
+            <title>🚫 Sin permiso</title>
+        </Head>
         <SignedInAppBar />
         <h1 className="text-center mt-5 font-xl">
             No tienes permiso para ver esta página
@@ -58,6 +65,9 @@ function NotAllowedRoute() {
 
 function SignedOutRoute() {
     return <div>
+        <Head>
+            <title>Iniciar Sesión</title>
+        </Head>
         <SignedOutAppBar />
         <Container>
             <div className="mt-3">
@@ -76,6 +86,9 @@ function SignedOutRoute() {
 
 function LoadingRoute() {
     return <div>
+        <Head>
+            <title>Cargando</title>
+        </Head>
         <SignedInAppBar />
         <div className="fixed flex top-0 bottom-0 left-0 right-0 align-middle justify-center">
             <CircularProgress sx={{ alignSelf: 'center' }} size={60} />

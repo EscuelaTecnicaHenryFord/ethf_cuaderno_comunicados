@@ -21,7 +21,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs'
-import { Typography } from '@mui/material';
+import { DialogContentText, Typography } from '@mui/material';
 import DialogActions from '@mui/material/DialogActions';
 import { api } from '~/utils/api';
 import { useMemo } from 'react'
@@ -38,6 +38,7 @@ import Avatar from '@mui/material/Avatar';
 import { nameInitials, stringAvatar, transformName } from '~/lib/util/nameUtils';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ProtectedRoute from '~/lib/ProtectedRoute';
+import { useUserRole } from '~/lib/util/useUserRole';
 
 
 export default function CommunicationsWrapper() {
@@ -51,7 +52,9 @@ export function Communications() {
 
     const [start, end] = filters.values.dateRange || [undefined, undefined]
 
-    const { data: communications } = api.getCommunications.useQuery({
+    const role = useUserRole()
+
+    const { data: communications, refetch } = api.getCommunications.useQuery({
         mineOnly: false,
         from: start ? new Date(start) : null,
         to: end ? new Date(end) : null,
@@ -59,7 +62,11 @@ export function Communications() {
         subject: filters.values.subject,
         course: filters.values.course,
         teacher: filters.values.teacher,
+    }, {
+        refetchInterval: 1000 * 60,
     })
+
+    const { mutateAsync: deleteCommunications } = api.deleteCommunications.useMutation()
 
     const rows = useMemo(() => {
         if (!communications) return []
@@ -69,7 +76,7 @@ export function Communications() {
             studentName: communication.student?.name || '<no encontrado>',
             studentEnrolment: communication.student?.enrolment,
             subjectName: communication.subject?.name ? `${communication.subjectCode} - ${communication.subject?.name}` : communication.subjectCode,
-            message: communication.message,
+            message: <span style={{ color: communication.color }}>{communication.message}</span>,
             date: dayjs(dayjs(communication.timestamp).valueOf()).format('DD/MM/YYYY'),
             time: dayjs(dayjs(communication.timestamp).valueOf()).format('HH:ss'),
             teacherName: communication.teacher?.name || communication.teacherEmail,
@@ -96,15 +103,90 @@ export function Communications() {
                 <Chip label={selection.length} sx={{ fontWeight: 500 }} />
             </Tooltip>}
 
-            {selection.length >= 1 && <Tooltip title="Eliminar seleccionados">
-                <IconButton aria-label="delete">
+            {(selection.length >= 1 && role.isAdmin) && <Tooltip title="Eliminar seleccionados">
+                <IconButton aria-label="delete"
+                    onClick={() => {
+                        if (confirm(`¿Está seguro que desea eliminar ${selection.length} comunicaciones?`)) {
+                            void deleteCommunications(selection).then(() => {
+                                void refetch()
+                            })
+                        }
+                    }}
+                >
                     <DeleteIcon color='error' />
                 </IconButton>
             </Tooltip>}
         </>
     }
 
-    return <div>
+    const chips = <>
+        {!filters.values.dateRange && <Chip
+            icon={<AddIcon />}
+            label="Fecha"
+            onClick={() => filters.pickers.setOpen.dateRange(true)}
+        />}
+        {filters.values.dateRange && <Chip
+            icon={<CalendarMonthIcon />}
+            label={`${dayjs(filters.values.dateRange[0]).format('DD/MM/YYYY')} - ${dayjs(filters.values.dateRange[1]).format('DD/MM/YYYY')}`}
+            onClick={() => filters.pickers.setOpen.dateRange(true)}
+            onDelete={() => void filters.setters.setDateRange(null)} />}
+
+
+
+        {!filters.values.course && <Chip
+            icon={<AddIcon />}
+            label="Curso"
+            onClick={() => filters.pickers.setOpen.course(true)}
+        />}
+        {filters.values.course && <Chip
+            icon={<PeopleIcon />}
+            label={`${filters.values.course}° año`}
+            onClick={() => filters.pickers.setOpen.course(true)}
+            onDelete={() => void filters.setters.setCourse(null)} />}
+
+
+
+        {!filters.values.subject && <Chip
+            icon={<AddIcon />}
+            label="Materia"
+            onClick={() => filters.pickers.setOpen.subject(true)}
+        />}
+        {filters.values.subject && <Chip
+            icon={<SchoolIcon />}
+            label={`${filters.values.subject}`}
+            onClick={() => filters.pickers.setOpen.subject(true)}
+            onDelete={() => void filters.setters.setSubject(null)} />}
+
+
+
+        {!filters.values.student && <Chip
+            icon={<AddIcon />}
+            label="Estudiante"
+            onClick={() => filters.pickers.setOpen.student(true)}
+        />}
+        {filters.values.student && <Chip
+            icon={<FaceIcon />}
+            label="ALMARAZ IGLESIAS, Lola"
+            onClick={() => filters.pickers.setOpen.student(true)}
+            onDelete={() => void filters.setters.setStudent(null)} />}
+
+
+
+        {!filters.values.teacher && <Chip
+            icon={<AddIcon />}
+            label="Docente"
+            onClick={() => filters.pickers.setOpen.teacher(true)}
+        />}
+        {filters.values.teacher && <Chip
+            icon={<PersonIcon />}
+            label={`${filters.values.teacher}`}
+            onClick={() => filters.pickers.setOpen.teacher(true)}
+            onDelete={() => void filters.setters.setTeacher(null)} />}
+    </>
+
+    const [filtersOpen, setFiltersOpen] = useState(false)
+
+    return <ProtectedRoute>
         <AppBar />
         <Pickers filters={filters} />
         <Box
@@ -142,6 +224,22 @@ export function Communications() {
                 height: 52,
             }}
         >
+            <Dialog
+                open={filtersOpen}
+                onClose={() => setFiltersOpen(false)}
+            >
+                <Box sx={{ width: 230, maxWidth: '100%' }}>
+                    <DialogTitle>Filtros</DialogTitle>
+                    <DialogContent>
+                        <div className='grid sm:grid-cols-2 gap-2'>
+                            {chips}
+                        </div>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setFiltersOpen(false)}>Cerrar</Button>
+                    </DialogActions>
+                </Box>
+            </Dialog>
             <Stack
                 spacing={2}
                 direction="row"
@@ -152,7 +250,10 @@ export function Communications() {
             >
                 <SelectedOptions />
                 <Tooltip title="Filtrar comunicaciones">
-                    <IconButton aria-label="filter">
+                    <IconButton aria-label="filter"
+                        onClick={() => {
+                            setFiltersOpen(true)
+                        }}>
                         <TuneIcon color='primary' />
                     </IconButton>
                 </Tooltip>
@@ -169,72 +270,11 @@ export function Communications() {
             >
                 <SelectedOptions />
 
+                {chips}
 
-                {!filters.values.dateRange && <Chip
-                    icon={<AddIcon />}
-                    label="Fecha"
-                    onClick={() => filters.pickers.setOpen.dateRange(true)}
-                />}
-                {filters.values.dateRange && <Chip
-                    icon={<CalendarMonthIcon />}
-                    label={`${dayjs(filters.values.dateRange[0]).format('DD/MM/YYYY')} - ${dayjs(filters.values.dateRange[1]).format('DD/MM/YYYY')}`}
-                    onClick={() => filters.pickers.setOpen.dateRange(true)}
-                    onDelete={() => void filters.setters.setDateRange(null)} />}
-
-
-
-                {!filters.values.course && <Chip
-                    icon={<AddIcon />}
-                    label="Curso"
-                    onClick={() => filters.pickers.setOpen.course(true)}
-                />}
-                {filters.values.course && <Chip
-                    icon={<PeopleIcon />}
-                    label={`${filters.values.course}° año`}
-                    onClick={() => filters.pickers.setOpen.course(true)}
-                    onDelete={() => void filters.setters.setCourse(null)} />}
-
-
-
-                {!filters.values.subject && <Chip
-                    icon={<AddIcon />}
-                    label="Materia"
-                    onClick={() => filters.pickers.setOpen.subject(true)}
-                />}
-                {filters.values.subject && <Chip
-                    icon={<SchoolIcon />}
-                    label={`${filters.values.subject}`}
-                    onClick={() => filters.pickers.setOpen.subject(true)}
-                    onDelete={() => void filters.setters.setSubject(null)} />}
-
-
-
-                {!filters.values.student && <Chip
-                    icon={<AddIcon />}
-                    label="Estudiante"
-                    onClick={() => filters.pickers.setOpen.student(true)}
-                />}
-                {filters.values.student && <Chip
-                    icon={<FaceIcon />}
-                    label="ALMARAZ IGLESIAS, Lola"
-                    onClick={() => filters.pickers.setOpen.student(true)}
-                    onDelete={() => void filters.setters.setStudent(null)} />}
-
-
-
-                {!filters.values.teacher && <Chip
-                    icon={<AddIcon />}
-                    label="Docente"
-                    onClick={() => filters.pickers.setOpen.teacher(true)}
-                />}
-                {filters.values.teacher && <Chip
-                    icon={<PersonIcon />}
-                    label={`${filters.values.teacher}`}
-                    onClick={() => filters.pickers.setOpen.teacher(true)}
-                    onDelete={() => void filters.setters.setTeacher(null)} />}
             </Stack>
-        </Box>
-    </div>
+        </Box >
+    </ProtectedRoute >
 }
 
 
@@ -246,7 +286,9 @@ const columns: GridColDef[] = [
     { field: 'studentEnrolment', headerName: 'Matrícula', width: 100 },
     { field: 'studentName', headerName: 'Nombre', width: 190 },
     { field: 'subjectName', headerName: 'Materia', width: 210 },
-    { field: 'message', headerName: 'Mensaje', width: 350 },
+    { field: 'message', headerName: 'Mensaje', width: 350, renderCell: params => {
+        return <>{params.value}</>
+    } },
     { field: 'date', headerName: 'Fecha', width: 100 },
     { field: 'time', headerName: 'Hora', width: 60 },
     { field: 'teacherName', headerName: 'Docente', width: 130 },
