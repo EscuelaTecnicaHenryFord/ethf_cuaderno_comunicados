@@ -184,20 +184,26 @@ export function NewCommunication() {
                                             setMessage(value.target.value?.toString() || '')
                                         }}
                                     >
-                                        {messages?.map(message => <MenuItem value={message.text} key={message.text}><span className='py-1' style={{color: message.sentiment.color}}>{message.text}</span></MenuItem>)}
+                                        {messages?.map(message => <MenuItem value={message.text} key={message.text}><span className='py-1' style={{ color: message.sentiment.color }}>{message.text}</span></MenuItem>)}
                                     </Select>
                                 </FormControl>
                             </div>
-                            <div className='mt-3'>
-                                <TextField id="outlined-basic" label="Comentario interno" variant="outlined" fullWidth
+
+                        </Grid>
+
+                        <Grid item xs={12} md={6}>
+                            <div className='mb-3'>
+                                <TextField
+                                    rows={2}
+                                    id="outlined-basic"
+                                    label="Detalle"
+                                    variant="outlined"
+                                    fullWidth
                                     multiline
                                     value={comment}
                                     onChange={e => setComment(e.target.value)}
                                 />
                             </div>
-                        </Grid>
-
-                        <Grid item xs={12} md={6}>
                             <FormControl fullWidth>
                                 <InputLabel id="demo-simple-select-label">Agregar estudiante</InputLabel>
                                 <Select
