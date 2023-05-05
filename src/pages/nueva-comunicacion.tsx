@@ -256,7 +256,7 @@ export function NewCommunication() {
                         </div>}
                     </div>
                     {!!(almostReady && !ready) && <div className='mt-3'>
-                        <p className='text-red-500'>Completar campos faltantes (*)</p>
+                        <p className='text-red-500'>Completar campos obligatorios (*)</p>
                     </div>}
                     <div className='mt-3'>
                         <Button fullWidth variant='outlined' className='mt-3' disabled={!ready || loading}
