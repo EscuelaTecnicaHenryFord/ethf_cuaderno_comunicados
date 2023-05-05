@@ -46,11 +46,31 @@ export const appRouter = createTRPCRouter({
     subject: z.string(),
     message: z.string(),
     comment: z.string(),
+    action_taken: z.string(),
     student: z.string(),
     timestamp: z.date()
   }))).mutation(async ({ input, ctx }) => {
     const teacherEmail = ctx.session.user.email;
     if (!teacherEmail) throw new Error('No email found in session');
+
+
+    const role = await settings.getUserRole(ctx.session.user.email || '');
+
+    if (!role.isTeacher) {
+      throw new Error('User is not a teacher')
+    }
+
+    if (!role.isAdmin) {
+      for (const item of input) {
+        if (item.timestamp.valueOf() > Date.now() + 10 * 1000 * 60) throw new Error('Invalid timestamp')
+        if (item.timestamp.valueOf() < Date.now() - 10 * 1000 * 60 * 60 * 24) throw new Error('Invalid timestamp')
+
+        const subject = await settings.getSubject(item.subject)
+        if (!subject) throw new Error('Invalid subject')
+        if (subject.teachers.indexOf(teacherEmail) === -1) throw new Error('Invalid subject')
+      }
+    }
+
 
     let poolId: string | null = null
 
@@ -63,7 +83,6 @@ export const appRouter = createTRPCRouter({
       poolId = pool.id
     }
 
-
     return await ctx.prisma.$transaction(input.map(item => ctx.prisma.communication.create({
       data: {
         comment: item.comment,
@@ -72,6 +91,7 @@ export const appRouter = createTRPCRouter({
         subjectCode: item.subject,
         timestamp: item.timestamp,
         teacherEmail: teacherEmail,
+        action_taken: item.action_taken,
         poolId: poolId
       }
     })))

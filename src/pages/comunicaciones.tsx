@@ -76,11 +76,13 @@ export function Communications() {
             studentName: communication.student?.name || '<no encontrado>',
             studentEnrolment: communication.student?.enrolment,
             subjectName: communication.subject?.name ? `${communication.subjectCode} - ${communication.subject?.name}` : communication.subjectCode,
-            message: <span style={{ color: communication.color }}>{communication.message}</span>,
+            message: communication.message,
+            color: communication.color,
             date: dayjs(dayjs(communication.timestamp).valueOf()).format('DD/MM/YYYY'),
             time: dayjs(dayjs(communication.timestamp).valueOf()).format('HH:ss'),
             teacherName: communication.teacher?.name || communication.teacherEmail,
             comment: communication.comment,
+            action_taken: communication.action_taken
         }))
     }, [communications])
 
@@ -90,14 +92,28 @@ export function Communications() {
     function SelectedOptions() {
         return <>
             {selection.length === 1 && <Tooltip title="Abrir seleccionado">
+                <span className='hidden sm:block'>
+                    <Button aria-label="open selected"
+                        className='mr-[-2px]'
+                        variant='outlined'
+                        onClick={() => {
+                            window.open(`/comunicaciones/${selection[0] || ''}`)
+                        }}
+                    >
+                        <OpenInNewIcon />
+                        <span className='block ml-2 mt-1'>Mostrar</span>
+                    </Button>
+                </span>
+            </Tooltip>}
+            <span className='sm:hidden'>
                 <IconButton aria-label="open selected"
                     onClick={() => {
                         window.open(`/comunicaciones/${selection[0] || ''}`)
                     }}
                 >
-                    <OpenInNewIcon color='action' />
+                    <OpenInNewIcon />
                 </IconButton>
-            </Tooltip>}
+            </span>
 
             {selection.length > 1 && <Tooltip title="Cantidad seleccionados">
                 <Chip label={selection.length} sx={{ fontWeight: 500 }} />
@@ -186,6 +202,9 @@ export function Communications() {
 
     const [filtersOpen, setFiltersOpen] = useState(false)
 
+    const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 50 })
+    const [columnVisibilityModel, setColumnVisibilityModel] = useState<{ [key: string]: boolean }>({ id: false })
+
     return <ProtectedRoute>
         <AppBar />
         <Pickers filters={filters} />
@@ -202,14 +221,14 @@ export function Communications() {
                 sx={{ border: 'none' }}
                 rows={rows}
                 columns={columns}
-                paginationModel={{ page: page, pageSize: 50 }}
-                onPaginationModelChange={(page) => {
-                    setPage(page.page)
+                paginationModel={paginationModel}
+                onPaginationModelChange={setPaginationModel}
+                columnVisibilityModel={columnVisibilityModel}
+                onColumnVisibilityModelChange={setColumnVisibilityModel}
+                onCellDoubleClick={(cell) => {
+                    if (cell.value === true || cell.value === false) return
+                    cell.id && window.open(`/comunicaciones/${cell.id}`)
                 }}
-                columnVisibilityModel={{ id: false }}
-                // onRowDoubleClick={(row) => {
-                //     row.id && window.open(`/comunicaciones/${row.id}`)
-                // }}
                 onRowSelectionModelChange={s => setSelection(s.map(s => s.toString()))}
                 checkboxSelection
             />
@@ -286,13 +305,18 @@ const columns: GridColDef[] = [
     { field: 'studentEnrolment', headerName: 'Matrícula', width: 100 },
     { field: 'studentName', headerName: 'Nombre', width: 190 },
     { field: 'subjectName', headerName: 'Materia', width: 210 },
-    { field: 'message', headerName: 'Mensaje', width: 350, renderCell: params => {
-        return <>{params.value}</>
-    } },
+    {
+        field: 'message', headerName: 'Mensaje', width: 350, renderCell: params => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            const color = params.row?.color as unknown as string
+            return <span style={{ color: color }}>{params.value}</span>
+        }
+    },
     { field: 'date', headerName: 'Fecha', width: 100 },
     { field: 'time', headerName: 'Hora', width: 60 },
     { field: 'teacherName', headerName: 'Docente', width: 130 },
     { field: 'comment', headerName: 'Comentario', width: 500 },
+    { field: 'action_taken', headerName: 'Accion pedagógica tomada', width: 500 },
     // {
     //     field: 'age',
     //     headerName: 'Age',
@@ -316,8 +340,8 @@ function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
     const role = useUserRole()
 
     const { data: courses } = api.getCourses.useQuery()
-    const { data: subjects } = api.getAllSubjects.useQuery(undefined, { enabled: role.isAdmin})
-    const { data: mySubjects } = api.getMySubjects.useQuery(undefined, { enabled: !role.isAdmin})
+    const { data: subjects } = api.getAllSubjects.useQuery(undefined, { enabled: role.isAdmin })
+    const { data: mySubjects } = api.getMySubjects.useQuery(undefined, { enabled: !role.isAdmin })
     const { data: students } = api.getAllStudents.useQuery()
     const { data: teachers } = api.getTeachers.useQuery()
 

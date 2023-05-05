@@ -17,6 +17,7 @@ export const compatGeneralSettingsSchema = z.object({
         code: z.string(),
         color: z.string(),
     })).optional().nullable(),
+    reportToEmails: z.array(z.string()).optional().nullable(),
 })
 
 export const generalSettingsSchema = z.object({
@@ -30,6 +31,7 @@ export const generalSettingsSchema = z.object({
         code: z.string(),
         color: z.string(),
     })),
+    reportToEmails: z.array(z.string()).optional().nullable(),
 })
 
 export const teacherSchema = z.object({
@@ -251,6 +253,11 @@ export class Settings {
 
     async _autoImport() {
         if (!this._dataImported || env.NODE_ENV === 'development') await this.importData();
+    }
+
+    async getReportToEmails() {
+        await this._autoImport();
+        return this.general.reportToEmails || [];
     }
 
     _errorImporting() {

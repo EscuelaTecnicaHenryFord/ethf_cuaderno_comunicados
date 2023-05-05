@@ -29,7 +29,7 @@ export default function Communication() {
 
             {data && <div className="mt-5">
                 <div className="">
-                    <label className="text-sm font-semibold">Profesor</label>
+                    <label className="text-sm font-semibold">Docente</label>
                     <p className="text-xl">{data.teacher?.name || data.teacherEmail}</p>
                     <p>{dayjs(data.timestamp).format('DD/MM/YY - HH:mm')} <span className="text-gray-500 font-bold">{data.subjectCode}</span> {data.subject?.name}</p>
                 </div>
@@ -53,8 +53,12 @@ export default function Communication() {
                     <label className="text-sm font-semibold">Comentario</label>
                     <p className="text-xl">{data.comment}</p>
                 </div>}
+                {data.action_taken && <div className="mt-3">
+                    <label className="text-sm font-semibold">Acción pedagógica tomada por el docente</label>
+                    <p className="text-xl">{data.action_taken}</p>
+                </div>}
             </div>}
-            <hr className="my-2"/>
+            <hr className="mb-2 mt-3"/>
             {(data && role.isAdmin) && <Button variant="outlined" startIcon={<DeleteIcon />} color="error" className="mt-2"
                 onClick={() => {
                     void deleteCommunications([id]).then(() => {

@@ -26,6 +26,17 @@ const server = z.object({
   AZUREAD_TENANT_ID: z.string(),
   SETTINGS_PATH: z.string(),
   DATA_PATH: z.string(),
+  CRON_JOB_TOKEN: z.string().optional(),
+  CRON_JOB_SCHEDULE: z.string().optional(),
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.string().optional(),
+  SMTP_USE_SSL: z.string().optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  DAILY_REPORTS: z.string().optional(),
+  SMTP_FROM_EMAIL: z.string().optional(),
+  SMTP_FROM_NAME: z.string().optional(),
+  NODEMAILER_SMTP_SERVICE: z.string().optional(),
 });
 
 /**
@@ -52,6 +63,17 @@ const processEnv = {
   AZUREAD_TENANT_ID: process.env.AZUREAD_TENANT_ID,
   SETTINGS_PATH: process.env.SETTINGS_PATH || path.resolve('./.local/settings'),
   DATA_PATH: process.env.DATA_PATH || path.resolve('./.local/data'),
+  CRON_JOB_TOKEN: process.env.CRON_JOB_TOKEN,
+  CRON_JOB_SCHEDULE: process.env.CRON_JOB_SCHEDULE,
+  SMTP_HOST: process.env.SMTP_HOST,
+  SMTP_PORT: process.env.SMTP_PORT,
+  SMTP_USE_SSL: process.env.SMTP_USE_SSL,
+  SMTP_USER: process.env.SMTP_USER,
+  SMTP_PASS: process.env.SMTP_PASS,
+  DAILY_REPORTS: process.env.DAILY_REPORTS,
+  SMTP_FROM_EMAIL: process.env.SMTP_FROM_EMAIL,
+  SMTP_FROM_NAME: process.env.SMTP_FROM_NAME,
+  NODEMAILER_SMTP_SERVICE: process.env.NODEMAILER_SMTP_SERVICE,
   // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
 };
 

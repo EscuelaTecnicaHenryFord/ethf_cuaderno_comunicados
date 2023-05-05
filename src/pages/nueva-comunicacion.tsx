@@ -59,6 +59,7 @@ export function NewCommunication() {
     const [timestamp, setTimestamp] = useState(dayjs())
     const [message, setMessage] = useState('')
     const [comment, setComment] = useState('')
+    const [action_taken, setActionTaken] = useState('')
     const [selectedStudents, setSelectedStudents] = useState<string[]>([])
     const filteredSelectedStudents = useMemo(() => {
         if (!students || !selectedStudents.length) return []
@@ -76,13 +77,15 @@ export function NewCommunication() {
 
     const [loading, setLoading] = useState(false)
 
-    const ready = message && filteredSubjectCode && filteredSelectedStudents?.length && timestamp
+    const almostReady = message && filteredSubjectCode && filteredSelectedStudents?.length && timestamp
+    const ready = almostReady && action_taken
+    const missingStudent = message && filteredSubjectCode && timestamp
 
     const filteredSubjects = useMemo(() => {
         if (!subjects) return []
         return subjects.filter(subject => subject.courseYear === courseYear).map(subject => ({
             ...subject, isMine: role.isAdmin || subject?.teachers.includes(session?.user.email || '')
-        }))
+        })).filter(subject => subject.isMine)
     }, [subjects, courseYear, role.isAdmin, session?.user.email])
 
 
@@ -95,6 +98,7 @@ export function NewCommunication() {
             message: message,
             comment: comment,
             student: student?.enrolment || '',
+            action_taken: action_taken
         }))).then(() => {
             setLoading(false)
             void router.push({
@@ -115,17 +119,7 @@ export function NewCommunication() {
                 <Box sx={{ flexGrow: 1 }} className='pt-4'>
                     <Grid container spacing={2}>
                         <Grid item xs={12} md={6} >
-                            {/* <Card className='mb-3'>
-                                <Stack spacing={1} direction={'row'} sx={{ p: 2 }} overflow={'auto'} >
-                                    <Chip label="1" />
-                                    <Chip label="1" />
-                                    <Chip label="1" />
-                                    <Chip label="1" />
-                                    <Chip label="1" />
-                                    <Chip label="1" />
-                                    <Chip label="1" />
-                                </Stack>
-                            </Card> */}
+                            <h1 className='text-xl mb-[18px]'>Crear nueva comunicación</h1>
                             <div className='grid gap-2 grid-cols-[1fr_2fr]'>
                                 <FormControl fullWidth>
                                     <InputLabel id="demo-simple-select-label">Curso</InputLabel>
@@ -157,13 +151,33 @@ export function NewCommunication() {
                                 </FormControl>
                             </div>
 
+                            <div className='mt-3'>
+                                <FormControl fullWidth>
+                                    <InputLabel id="demo-simple-select-label">Agregar estudiante</InputLabel>
+                                    <Select
+                                        labelId="demo-simple-select-label"
+                                        id="demo-simple-select"
+                                        value={''}
+                                        label="Agregar estudiante"
+                                        onChange={(value) => {
+                                            setSelectedStudents([...new Set([...selectedStudents, value.target.value?.toString() || ''])])
+                                        }}
+                                    >
+                                        {students?.map(student => <MenuItem value={student.enrolment} key={student.enrolment}><span className='py-1'><span className='text-gray-500 text-sm mb-1 block'>{student.enrolment}</span> {student.name}</span></MenuItem>)}
+                                    </Select>
+                                </FormControl>
+                            </div>
+
                             <div className='grid gap-2 grid-cols-2 mt-3'>
                                 <DatePicker label="Fecha" sx={{ width: '100%' }}
+                                    minDate={dayjs().subtract(10, 'days')}
+                                    maxDate={dayjs().add(1, 'minute')}
                                     format="DD/MM/YYYY"
                                     value={timestamp}
                                     onChange={(date) => setTimestamp(dayjs(date?.toString() || '').startOf('day').add(timestamp.hour(), 'hour').add(timestamp.minute(), 'minute'))}
                                 />
                                 <TimePicker label="Hora"
+                                    maxTime={timestamp.startOf('day').valueOf() === dayjs().startOf('day').valueOf() ? dayjs().add(1, 'minute') : undefined}
                                     value={timestamp}
                                     onChange={(_date) => {
                                         const date = dayjs(_date?.toString() || '')
@@ -172,10 +186,14 @@ export function NewCommunication() {
                                 />
                             </div>
 
-                            <div className='mt-3'>
+                        </Grid>
+
+                        <Grid item xs={12} md={6}>
+                            <div className=''>
                                 <FormControl fullWidth>
                                     <InputLabel id="demo-simple-select-label">Motivo</InputLabel>
                                     <Select
+                                        required
                                         labelId="demo-simple-select-label"
                                         id="demo-simple-select"
                                         value={message}
@@ -188,11 +206,7 @@ export function NewCommunication() {
                                     </Select>
                                 </FormControl>
                             </div>
-
-                        </Grid>
-
-                        <Grid item xs={12} md={6}>
-                            <div className='mb-3'>
+                            <div className='mt-3'>
                                 <TextField
                                     rows={2}
                                     id="outlined-basic"
@@ -204,39 +218,46 @@ export function NewCommunication() {
                                     onChange={e => setComment(e.target.value)}
                                 />
                             </div>
-                            <FormControl fullWidth>
-                                <InputLabel id="demo-simple-select-label">Agregar estudiante</InputLabel>
-                                <Select
-                                    labelId="demo-simple-select-label"
-                                    id="demo-simple-select"
-                                    value={''}
-                                    label="Agregar estudiante"
-                                    onChange={(value) => {
-                                        setSelectedStudents([...new Set([...selectedStudents, value.target.value?.toString() || ''])])
-                                    }}
-                                >
-                                    {students?.map(student => <MenuItem value={student.enrolment} key={student.enrolment}><span className='py-1'><span className='text-gray-500 text-sm mb-1 block'>{student.enrolment}</span> {student.name}</span></MenuItem>)}
-                                </Select>
-                            </FormControl>
-                            {filteredSelectedStudents.length > 0 && <div className='mt-2'>
-                                <div className='text-gray-500'>
-                                    Estudiantes
-                                </div>
-                                {
-                                    filteredSelectedStudents.map(student => <Chip
-                                        avatar={<Avatar {...stringAvatar(transformName(student.name))} />}
-                                        key={student.enrolment}
-                                        label={student.name}
-                                        variant='outlined'
-                                        sx={{ m: 0.2 }}
-                                        onDelete={() => {
-                                            setSelectedStudents(selectedStudents.filter(s => s !== student.enrolment))
-                                        }}
-                                    />)
-                                }
-                            </div>}
+                            <div className='mt-3'>
+                                <TextField
+                                    rows={2}
+                                    id="outlined-basic"
+                                    label="Acción pedagógica que tomó el docente"
+                                    variant="outlined"
+                                    fullWidth
+                                    multiline
+                                    required
+                                    value={action_taken}
+                                    onChange={e => setActionTaken(e.target.value)}
+                                />
+                            </div>
                         </Grid>
                     </Grid>
+                    <div className='mt-3'>
+                        {filteredSelectedStudents.length > 0 ? <div className='mt-2'>
+                            <div className='text-gray-500'>
+                                Estudiantes
+                            </div>
+                            {
+                                filteredSelectedStudents.map(student => <Chip
+                                    avatar={<Avatar {...stringAvatar(transformName(student.name))} />}
+                                    key={student.enrolment}
+                                    label={student.name}
+                                    variant='outlined'
+                                    sx={{ m: 0.2 }}
+                                    onDelete={() => {
+                                        setSelectedStudents(selectedStudents.filter(s => s !== student.enrolment))
+                                    }}
+                                />)
+                            }
+                        </div> : <div>
+                            {!(missingStudent) && "Estudiantes seleccionados: 0"}
+                            {!!(missingStudent) && <p className='text-red-500'>Agregue al menos un estudiante</p>}
+                        </div>}
+                    </div>
+                    {!!(almostReady && !ready) && <div className='mt-3'>
+                        <p className='text-red-500'>Completar campos faltantes (*)</p>
+                    </div>}
                     <div className='mt-3'>
                         <Button fullWidth variant='outlined' className='mt-3' disabled={!ready || loading}
                             onClick={() => {
