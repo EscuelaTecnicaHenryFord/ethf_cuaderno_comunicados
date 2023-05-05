@@ -99,7 +99,8 @@ async function getDailyReportEmail(): Promise<EmailData | null> {
     })
 
     // Don't send report if there are no communications and the last report was sent today
-    if (todaysCommunicationsRaw.length === 0 && dayjs(lastDailyReport).isAfter(dayjs().startOf('day'))) {
+    // if (todaysCommunicationsRaw.length === 0 && dayjs(lastDailyReport).isAfter(dayjs().startOf('day'))) {
+    if (todaysCommunicationsRaw.length === 0) {
         return null
     }
 

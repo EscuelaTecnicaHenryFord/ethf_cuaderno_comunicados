@@ -49,7 +49,7 @@ export async function getReportContent(body: React.ReactNode, _communications: C
         <body>
             {!body && <p>Se han registrado {communications.length} comunicaciones el día {dayjs().format('DD/MM/YYYY')}</p>}
             {body}
-            <div>
+            {communications.length > 0 && <div>
                 <h2>Comunicaciones</h2>
                 {communications.map((communication, i) => {
                     return <a key={i} style={{ backgroundColor: bgs[i % 2], padding: '10px', whiteSpace: 'nowrap', overflow: 'hidden' }} href={"https://comunicaciones.henryford.edu.ar/comunicaciones/" + communication.id}>
@@ -59,7 +59,7 @@ export async function getReportContent(body: React.ReactNode, _communications: C
                         <p style={{ fontSize: '14px' }}>{communication.student?.coursingYear}° año - {communication.subjectCode}</p>
                     </a>
                 })}
-            </div>
+            </div>}
         </body>
     </html>)
 }
