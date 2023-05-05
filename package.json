@@ -9,7 +9,7 @@
     "lint": "next lint",
     "start": "run-p start:*",
     "start:app": "next start",
-    "strat:cron": "node cron.js"
+    "start:cron": "node src/cron.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.10.8",
