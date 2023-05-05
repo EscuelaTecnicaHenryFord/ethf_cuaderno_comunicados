@@ -6,6 +6,8 @@ dotenv.config()
 
 const DEFAULT_SCHEDULE = '0 0 8,15 * * 1-5'
 
+console.log('Starting cron job')
+
 const job = new CronJob(process.env.CRON_JOB_SCHEDULE ?? DEFAULT_SCHEDULE, () => {
     console.log('Running cron job')
     
