@@ -15,8 +15,9 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import { Button } from "@mui/material";
-
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import { Button, Dialog, DialogContentText, DialogContent } from "@mui/material";
 
 
 export default function SettingsFileEditorWrapper() {
@@ -52,6 +53,8 @@ function FileEditor(props: { filename: string }) {
 
   const [content, setContent] = useState<string | null>(null)
 
+  const [error, setError] = useState<string | null>(null)
+
   const save = useCallback(() => {
     console.log(content)
     if (content == null) return
@@ -61,6 +64,9 @@ function FileEditor(props: { filename: string }) {
     }).then(() => {
       alert("Guardado correctamente")
       void refetch()
+    }).catch(e => {
+      const message = (!!e ? (e as unknown as { message: string }).message : "Error desconocido")
+      setError(message)
     })
   }, [content, filename, refetch, saveFile])
 
@@ -84,6 +90,24 @@ function FileEditor(props: { filename: string }) {
 
   return (
     <>
+      <Dialog
+        open={!!error}
+        onClose={() => setError('')}
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"Ocurrion un error al guardar, revise el formato"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            {error}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setError('')} autoFocus>
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
       <div className="fixed top-[105px] sm:top-[113px] left-0 right-0 bottom-0">
         <Editor height="100%" defaultLanguage="json" defaultValue={data} key={(data != undefined && data != null) ? filename : 0} onChange={v => setContent(v || null)} />
       </div>

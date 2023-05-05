@@ -290,20 +290,41 @@ export class Settings {
     }
 
     /**
+ * @param {string} name 
+ * @param {string} data 
+*/
+    async _verifySaveFile(name, data) {
+        if (name === 'teachers.json') {
+            const teachers = JSON.parse(data)
+            return await z.array(teacherSchema).parseAsync(teachers);
+        }
+
+        if (name === 'students.json') {
+            const students = JSON.parse(data)
+            return await z.array(studentSchema).parseAsync(students);
+        }
+
+        if (name === 'subjects.json') {
+            const subjects = JSON.parse(data)
+            return await z.array(subjectSchema).parseAsync(subjects);
+        }
+
+        if (name === 'general.json') {
+            const general = JSON.parse(data)
+            return await compatGeneralSettingsSchema.parseAsync(general);
+        }
+
+        throw new Error('Invalid file name')
+    }
+
+    /**
      * @param {string} name 
      * @param {string} data 
     */
     async saveFile(name, data) {
-        const names = [
-            'teachers.json',
-            'students.json',
-            'subjects.json',
-            'general.json',
-        ]
-
-        if (!names.includes(name)) throw new Error('Invalid file name')
-
-        await writeFile(path.join(env.SETTINGS_PATH, name), data)
+        if (await this._verifySaveFile(name, data)) {
+            await writeFile(path.join(env.SETTINGS_PATH, name), data)
+        }
     }
 }
 
