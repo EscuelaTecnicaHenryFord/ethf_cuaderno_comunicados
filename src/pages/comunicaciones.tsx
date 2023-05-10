@@ -79,7 +79,7 @@ export function Communications() {
             message: communication.message,
             color: communication.color,
             date: dayjs(dayjs(communication.timestamp).valueOf()).format('DD/MM/YYYY'),
-            time: dayjs(dayjs(communication.timestamp).valueOf()).format('HH:ss'),
+            time: dayjs(dayjs(communication.timestamp).valueOf()).format('HH:mm'),
             teacherName: communication.teacher?.name || communication.teacherEmail,
             comment: communication.comment,
             action_taken: communication.action_taken
