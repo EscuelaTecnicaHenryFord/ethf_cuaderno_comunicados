@@ -108,26 +108,30 @@ export const appRouter = createTRPCRouter({
     if (!ctx.session.user.email) throw new Error('No email found in session');
     const role = await settings.getUserRole(ctx.session.user.email || '');
 
+    // Define start of this year in one line
+    const startOfYear = new Date(new Date().getFullYear(), 0, 1, 0, 0, 0);
+    const endOfYear = new Date(new Date().getFullYear(), 11, 31, 0, 0, 0);
+
     const result = await ctx.prisma.communication.findMany({
       where: {
         teacherEmail: (!role.isAdmin || input?.mineOnly) ? ctx.session.user.email : (input?.teacher ? input.teacher : undefined),
         timestamp: {
-          gte: input?.from || undefined,
-          lte: input?.to || undefined,
+          gte: input?.from || startOfYear,
+          lte: input?.to || endOfYear,
         },
         studentEnrolment: input?.student || undefined,
         subjectCode: input?.subject || undefined,
       }
     })
 
-    const result2 = await Promise.all(result.map(async communication => ({
+    const result2 = (await Promise.all(result.map(async communication => ({
       ...communication,
       student: await settings.getStudentByEnrolment(communication.studentEnrolment),
       subject: await settings.getSubject(communication.subjectCode),
       teacher: await settings.getTeacher(communication.teacherEmail),
       color: (await settings.getMessages()).find(message => message.text === communication.message)?.sentiment.color || '#000000',
       isMine: communication.teacherEmail === ctx.session.user.email,
-    })));
+    })))).reverse();
 
     return result2.filter(communication => {
       if (input?.course) {
