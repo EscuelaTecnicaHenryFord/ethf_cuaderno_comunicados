@@ -193,12 +193,14 @@ export const appRouter = createTRPCRouter({
     if (!ctx.session.user.email) throw new Error('No email found in session');
     const role = await settings.getUserRole(ctx.session.user.email || '');
 
-    if (!role.isAdmin) return false
-
     await ctx.prisma.communication.deleteMany({
       where: {
         id: {
           in: input
+        },
+        teacherEmail: (!role.isAdmin) ? ctx.session.user.email : undefined,
+        createdAt: {
+          gte: (!role.isAdmin) ? new Date(Date.now() - 1000 * 60 * 60 * 24 * 7) : undefined
         }
       }
     })
