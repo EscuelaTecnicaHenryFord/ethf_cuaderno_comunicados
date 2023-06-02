@@ -71,7 +71,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
     },
 }));
 
-export default function AppBar() {
+export default function AppBar({onSearch}: {onSearch: (query: string) => unknown}) {
     const [open, setOpen] = useState(false);
     const router = useRouter();
 
@@ -191,7 +191,17 @@ export default function AppBar() {
                         >
                             Comunicaciones
                         </Typography>
-                        <Avatar {...stringAvatar(session?.user.name || 'H F')} />
+                        <Search>
+                            <SearchIconWrapper>
+                                <SearchIcon />
+                            </SearchIconWrapper>
+                            <StyledInputBase
+                                onChange={e => onSearch(e.target.value?.toString() || '')}
+                                placeholder="Buscar..."
+                                inputProps={{ 'aria-label': 'search' }}
+                            />
+                        </Search>
+                        {/* <Avatar {...stringAvatar(session?.user.name || 'H F')} /> */}
                         {/* <IconButton
                             size="large"
                             edge="start"

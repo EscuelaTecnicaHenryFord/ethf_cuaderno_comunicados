@@ -66,12 +66,47 @@ export function Communications() {
         refetchInterval: 1000 * 60,
     })
 
+    const communicationsByStudent = useMemo(() => {
+        if (!communications) return {}
+
+        const byStudent: Record<string, unknown[] | undefined> = {}
+
+        for (const communication of communications) {
+            const enrolment = communication.student?.enrolment;
+            if (!enrolment) continue;
+
+            if (!byStudent[enrolment]) byStudent[enrolment] = []
+            byStudent[enrolment]?.push(communication)
+        }
+
+        return byStudent
+    }, [communications])
+
     const { mutateAsync: deleteCommunications } = api.deleteCommunications.useMutation()
+
+    const [textFilter, setTextFilter] = useState('')
 
     const rows = useMemo(() => {
         if (!communications) return []
 
-        return communications.map(communication => ({
+        const filter = textFilter.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+
+
+        const filteredCommunications = communications.filter(communication => {
+            const dataString = `${communication.studentEnrolment}
+            ${communication.message}
+            ${communication.action_taken}
+            ${communication.teacher?.name || ''} ${communication.comment} ${communication.subjectCode} ${communication.student?.name || ''}
+            ${communication.studentEnrolment} ${communication.subject?.name || ''}
+            `
+            return dataString.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(filter)
+        })
+
+
+        console.log(textFilter, filteredCommunications.length)
+
+
+        return filteredCommunications.map(communication => ({
             id: communication.id,
             studentName: communication.student?.name || '<no encontrado>',
             studentEnrolment: communication.student?.enrolment,
@@ -84,7 +119,7 @@ export function Communications() {
             comment: communication.comment,
             action_taken: communication.action_taken
         }))
-    }, [communications])
+    }, [communications,textFilter])
 
     const [selection, setSelection] = useState<string[]>([])
     const [page, setPage] = useState(0)
@@ -205,9 +240,12 @@ export function Communications() {
     const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 50 })
     const [columnVisibilityModel, setColumnVisibilityModel] = useState<{ [key: string]: boolean }>({ id: false })
 
+
     return <ProtectedRoute>
-        <AppBar />
-        <Pickers filters={filters} />
+        <AppBar onSearch={setTextFilter} />
+        <Pickers filters={filters} studentShouldBeVisible={(enrolment) => {
+            return Object.keys(communicationsByStudent).includes(enrolment)
+        }} />
         <Box
             sx={{
                 position: 'fixed',
@@ -336,7 +374,7 @@ const columns: GridColDef[] = [
 ];
 
 
-function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
+function Pickers({ filters, studentShouldBeVisible }: { filters: ReturnType<typeof useFilters>, studentShouldBeVisible: (enrolment: string) => boolean }) {
     const role = useUserRole()
 
     const { data: courses } = api.getCourses.useQuery()
@@ -509,9 +547,9 @@ function Pickers({ filters }: { filters: ReturnType<typeof useFilters> }) {
                 <List>
                     {students?.filter(s => {
                         if (filters.values.course) {
-                            return s.coursingYear === filters.values.course
+                            return s.coursingYear === filters.values.course && studentShouldBeVisible(s.enrolment)
                         }
-                        return true
+                        return studentShouldBeVisible(s.enrolment);
                     }).map(student => <ListItemButton
                         key={student.enrolment}
                         onClick={() => {

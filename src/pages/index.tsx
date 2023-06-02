@@ -17,7 +17,7 @@ export function Home() {
     const router = useRouter()
 
     return <div>
-        <AppBar />
+        <AppBar onSearch={() => void 0}/>
         <Container>
             <Stack spacing={2} sx={{ mt: 1 }}>
                 {(role.isAdmin || role.isTeacher) && <Card>
