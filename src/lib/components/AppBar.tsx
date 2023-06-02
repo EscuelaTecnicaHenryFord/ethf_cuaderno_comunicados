@@ -71,7 +71,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
     },
 }));
 
-export default function AppBar({onSearch}: {onSearch: (query: string) => unknown}) {
+export default function AppBar({ onSearch }: { onSearch?: ((query: string) => unknown) | null }) {
     const [open, setOpen] = useState(false);
     const router = useRouter();
 
@@ -191,7 +191,7 @@ export default function AppBar({onSearch}: {onSearch: (query: string) => unknown
                         >
                             Comunicaciones
                         </Typography>
-                        <Search>
+                        {onSearch && <Search>
                             <SearchIconWrapper>
                                 <SearchIcon />
                             </SearchIconWrapper>
@@ -200,8 +200,8 @@ export default function AppBar({onSearch}: {onSearch: (query: string) => unknown
                                 placeholder="Buscar..."
                                 inputProps={{ 'aria-label': 'search' }}
                             />
-                        </Search>
-                        {/* <Avatar {...stringAvatar(session?.user.name || 'H F')} /> */}
+                        </Search>}
+                        {!onSearch && <Avatar {...stringAvatar(session?.user.name || 'H F')} />}
                         {/* <IconButton
                             size="large"
                             edge="start"
