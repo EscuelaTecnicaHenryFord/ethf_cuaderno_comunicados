@@ -1,6 +1,7 @@
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { settings } from "~/settings.mjs";
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 
 /**
  * This is the primary router for your server.
@@ -205,6 +206,26 @@ export const appRouter = createTRPCRouter({
       }
     })
   }),
+  updateCommunicationFollowUp: protectedProcedure.input(z.object({
+    id: z.string(),
+    followUp: z.string(),
+    state: z.literal('pending').or(z.literal('in_process')).or(z.literal('finalized')),
+  })).mutation(async ({ ctx, input }) => {
+    const role = await settings.getUserRole(ctx.session.user.email || '');
+    if (!role.isAdmin) throw new TRPCError({
+      code: 'FORBIDDEN',
+    });
+
+    return await ctx.prisma.communication.update({
+      where: {
+        id: input.id
+      },
+      data: {
+        followup: input.followUp,
+        state: input.state,
+      }
+    })
+  })
 });
 
 // export type definition of API

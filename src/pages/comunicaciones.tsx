@@ -117,9 +117,11 @@ export function Communications() {
             time: dayjs(dayjs(communication.timestamp).valueOf()).format('HH:mm'),
             teacherName: communication.teacher?.name || communication.teacherEmail,
             comment: communication.comment,
-            action_taken: communication.action_taken
+            action_taken: communication.action_taken,
+            followup: communication.followup,
+            state: communication.state,
         }))
-    }, [communications,textFilter])
+    }, [communications, textFilter])
 
     const [selection, setSelection] = useState<string[]>([])
     const [page, setPage] = useState(0)
@@ -350,11 +352,21 @@ const columns: GridColDef[] = [
             return <span style={{ color: color }}>{params.value}</span>
         }
     },
+    { field: 'state', headerName: 'Estado', width: 60, renderCell: params => {
+        if(params.value === 'pending') {
+            return <Dot color='#bbbbbb' />
+        }
+        if(params.value === 'in_process') {
+            return <Dot color='#ffea00' />
+        }
+        return <Dot color='#76ff03' />
+    } },
     { field: 'date', headerName: 'Fecha', width: 100 },
     { field: 'time', headerName: 'Hora', width: 60 },
     { field: 'teacherName', headerName: 'Docente', width: 130 },
-    { field: 'comment', headerName: 'Comentario', width: 500 },
-    { field: 'action_taken', headerName: 'Accion pedagógica tomada', width: 500 },
+    { field: 'comment', headerName: 'Comentario hecho por el docente', width: 300 },
+    { field: 'action_taken', headerName: 'Accion pedagógica tomada por el docente', width: 300 },
+    { field: 'followup', headerName: 'Seguimiento del equipo directivo/preceptoría', width: 300 },
     // {
     //     field: 'age',
     //     headerName: 'Age',
@@ -370,7 +382,7 @@ const columns: GridColDef[] = [
     //     valueGetter: (params: GridValueGetterParams) =>
     //         `${params.row.firstName || ''} ${params.row.lastName || ''}`,
     // },
-    { field: 'id', width: 20, }
+    { field: 'id', width: 20, },
 ];
 
 
@@ -627,3 +639,10 @@ function Pickers({ filters, studentShouldBeVisible }: { filters: ReturnType<type
 
 }
 
+
+
+function Dot({ color }: { color: string }) {
+    return <span className="h-[10px] w-[10px] rounded-full inline-block mb-[1px] mr-2" style={{ backgroundColor: color }}>
+
+    </span>
+}

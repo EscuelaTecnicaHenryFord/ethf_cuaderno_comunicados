@@ -3,19 +3,39 @@ import { useRouter } from "next/router";
 import ProtectedRoute from "~/lib/ProtectedRoute";
 import AppBar from "~/lib/components/AppBar";
 import DeleteIcon from '@mui/icons-material/Delete';
+import SaveIcon from '@mui/icons-material/Save';
 import { api } from "~/utils/api";
 import dayjs from "dayjs";
 import { useUserRole } from "~/lib/util/useUserRole";
+import TextField from '@mui/material/TextField';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+import { use, useEffect, useState } from 'react'
 
 export default function Communication() {
     const router = useRouter()
     const id = router.query.id?.toString() || ''
     const role = useUserRole()
 
-    const { data, isInitialLoading, error } = api.getCommunication.useQuery(id, { enabled: !!id })
+    const { data, isInitialLoading, error, isFetched, refetch } = api.getCommunication.useQuery(id, { enabled: !!id })
     const { mutateAsync: deleteCommunications } = api.deleteCommunications.useMutation()
+    const { mutateAsync: updateCommunicationFollowUp } = api.updateCommunicationFollowUp.useMutation()
+
+    const [followUpState, setFollowUpState] = useState<string | null>(null);
+    const [followUp, setFollowUp] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (isFetched && data && followUpState == null && followUp == null) {
+            setFollowUpState(data.state as unknown as string)
+            setFollowUp(data.followup as unknown as string)
+        }
+    }, [isFetched, data, followUpState, followUp])
 
     const e404 = (data == null && !isInitialLoading && !error) || !id
+
+    const pendingChanges = data && (followUpState != data.state || followUp != data.followup)
 
     return <ProtectedRoute>
         <AppBar />
@@ -57,19 +77,84 @@ export default function Communication() {
                     <label className="text-sm font-semibold">Acción pedagógica tomada por el docente</label>
                     <p className="text-xl">{data.action_taken}</p>
                 </div>}
+                <hr className="mb-2 mt-3" />
+                <div>
+                    <label className="text-sm font-semibold">Seguimiento</label>
+                    <div>
+                        <TextField multiline fullWidth minRows={3} placeholder="Escribe el seguimiento del caso aquí..."
+                            onChange={(e) => {
+                                const value = e.target.value
+                                setFollowUp(value)
+                            }}
+
+                            value={followUp || ''}
+                        />
+                    </div>
+                    <div className="mt-3">
+                        <StateSelect
+                            value={followUpState || 'pending'}
+                            onChange={(value) => {
+                                setFollowUpState(value)
+                            }}
+                        />
+                    </div>
+                </div>
             </div>}
-            <hr className="mb-2 mt-3"/>
-            {(data && role.isAdmin) && <Button variant="outlined" startIcon={<DeleteIcon />} color="error" className="mt-2"
-                onClick={() => {
-                    void deleteCommunications([id]).then(() => {
-                        if (confirm("¿Eliminar comunicación?")) {
-                            void router.push('/comunicaciones')
-                        }
-                    })
-                }}
-            >
-                Eliminar
-            </Button>}
+
+
+
+            <hr className="mb-2 mt-3" />
+            {pendingChanges && <p className="text-red-500">
+                *Tienes cambios sin guardar
+            </p>}
+            <div className="flex gap-2">
+
+                {(data && role.isAdmin) && <Button variant="outlined" startIcon={<DeleteIcon />} color="error" className="mt-2"
+                    onClick={() => {
+                        void deleteCommunications([id]).then(() => {
+                            if (confirm("¿Eliminar comunicación?")) {
+                                void router.push('/comunicaciones')
+                            }
+                        })
+                    }}
+                >
+                    Eliminar
+                </Button>}
+
+                {pendingChanges && <Button variant="outlined" startIcon={<SaveIcon />} color="primary" className="mt-2"
+                    onClick={() => {
+                        if (followUpState === null || followUp === null) return;
+                        void updateCommunicationFollowUp({ id, followUp, state: followUpState as unknown as ("pending" | "in_process" | "finalized") }).then(() => {
+                            void refetch()
+                        })
+                    }}
+                >
+                    Guardar
+                </Button>}
+            </div>
         </Container>
     </ProtectedRoute>
+}
+
+function StateSelect({ onChange, value }: { onChange?: (value: string) => unknown, value?: string }) {
+    return <FormControl fullWidth>
+        <InputLabel id="state-select-label">Estado</InputLabel>
+        <Select
+            labelId="state-select-label"
+            id="state-select"
+            value={value}
+            label="Estado"
+            onChange={e => onChange?.(e.target.value)}
+        >
+            <MenuItem value={"pending"}><Dot color="#bbbbbb" />Pendiente</MenuItem>
+            <MenuItem value={"in_process"}><Dot color="#ffea00" />En proceso</MenuItem>
+            <MenuItem value={"finalized"}><Dot color="#76ff03" />Finalizado</MenuItem>
+        </Select>
+    </FormControl>
+}
+
+function Dot({ color }: { color: string }) {
+    return <span className="h-[10px] w-[10px] rounded-full inline-block mb-[1px] mr-2" style={{ backgroundColor: color }}>
+
+    </span>
 }
