@@ -280,7 +280,7 @@ export function Communications() {
                 bottom: 0,
                 left: 0,
                 right: 180,
-                height: 52,
+                height: 51,
             }}
         >
             <Dialog
