@@ -171,7 +171,7 @@ export default function AppBar({ onSearch }: { onSearch?: ((query: string) => un
             </Drawer>
 
             <Box sx={{ flexGrow: 1, zIndex: 2 }}>
-                <MuiAppBar position="static" sx={{backgroundColor: '#111'}}>
+                <MuiAppBar position="static" sx={{backgroundColor: '#111'}} elevation={1}>
                     <Toolbar>
                         <IconButton
                             size="large"
