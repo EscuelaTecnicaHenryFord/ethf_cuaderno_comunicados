@@ -284,13 +284,15 @@ export function Communications() {
             }}
         >
             <Dialog
+                fullWidth
+                maxWidth='xs'
                 open={filtersOpen}
                 onClose={() => setFiltersOpen(false)}
             >
-                <Box sx={{ width: 230, maxWidth: '100%' }}>
+                <Box>
                     <DialogTitle>Filtros</DialogTitle>
                     <DialogContent>
-                        <div className='grid sm:grid-cols-2 gap-2'>
+                        <div className='grid gap-2'>
                             {chips}
                         </div>
                     </DialogContent>
@@ -352,15 +354,17 @@ const columns: GridColDef[] = [
             return <span style={{ color: color }}>{params.value}</span>
         }
     },
-    { field: 'state', headerName: 'Estado', width: 60, renderCell: params => {
-        if(params.value === 'pending') {
-            return <Dot color='#bbbbbb' />
+    {
+        field: 'state', headerName: 'Estado', width: 60, renderCell: params => {
+            if (params.value === 'pending') {
+                return <Dot color='#bbbbbb' />
+            }
+            if (params.value === 'in_process') {
+                return <Dot color='#ffea00' />
+            }
+            return <Dot color='#76ff03' />
         }
-        if(params.value === 'in_process') {
-            return <Dot color='#ffea00' />
-        }
-        return <Dot color='#76ff03' />
-    } },
+    },
     { field: 'date', headerName: 'Fecha', width: 100 },
     { field: 'time', headerName: 'Hora', width: 60 },
     { field: 'teacherName', headerName: 'Docente', width: 130 },
@@ -443,18 +447,18 @@ function Pickers({ filters, studentShouldBeVisible }: { filters: ReturnType<type
     }
 
     return <React.Fragment>
-        <Dialog open={filters.pickers.open.dateRange} onClose={() => filters.pickers.setOpen.dateRange(false)}>
+        <Dialog open={filters.pickers.open.dateRange} onClose={() => filters.pickers.setOpen.dateRange(false)} fullWidth maxWidth='xs'>
             <DialogTitle>Mostrar rango</DialogTitle>
             <DialogContent>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <Typography>
                         Mostrar desde
                     </Typography>
-                    <DatePicker value={start ? dayjs(start) : null} onChange={v => v && setStart(v.valueOf())} format="DD/MM/YYYY" />
+                    <DatePicker value={start ? dayjs(start) : null} onChange={v => v && setStart(v.valueOf())} format="DD/MM/YYYY" sx={{width: '100%'}} />
                     <Typography className='mt-3'>
                         Mostrar hasta
                     </Typography>
-                    <DatePicker value={end ? dayjs(end) : null} onChange={v => v && setEnd(v.valueOf())} format="DD/MM/YYYY" />
+                    <DatePicker value={end ? dayjs(end) : null} onChange={v => v && setEnd(v.valueOf())} format="DD/MM/YYYY" sx={{width: '100%'}}/>
                     <Stack
                         className='mt-3'
                         spacing={1}
@@ -514,8 +518,8 @@ function Pickers({ filters, studentShouldBeVisible }: { filters: ReturnType<type
             </DialogActions>
         </Dialog>
 
-        <Dialog open={filters.pickers.open.course} onClose={() => filters.pickers.setOpen.course(false)}>
-            <Box sx={{ width: 250, maxWidth: '100%' }}>
+        <Dialog open={filters.pickers.open.course} onClose={() => filters.pickers.setOpen.course(false)} fullWidth maxWidth='xs'>
+            <Box>
                 <DialogTitle>Curso</DialogTitle>
                 <List>
                     {courses?.map(course => <ListItemButton
@@ -531,8 +535,8 @@ function Pickers({ filters, studentShouldBeVisible }: { filters: ReturnType<type
             </Box>
         </Dialog>
 
-        <Dialog open={filters.pickers.open.subject} onClose={() => filters.pickers.setOpen.subject(false)}>
-            <Box sx={{ width: 250, maxWidth: '100%' }}>
+        <Dialog open={filters.pickers.open.subject} onClose={() => filters.pickers.setOpen.subject(false)} fullWidth maxWidth='xs'>
+            <Box>
                 <DialogTitle>Materia</DialogTitle>
                 <List>
                     {(mySubjects ?? subjects)?.filter(s => {
@@ -553,8 +557,8 @@ function Pickers({ filters, studentShouldBeVisible }: { filters: ReturnType<type
             </Box>
         </Dialog>
 
-        <Dialog open={filters.pickers.open.student} onClose={() => filters.pickers.setOpen.student(false)}>
-            <Box sx={{ width: 450, maxWidth: '100%' }}>
+        <Dialog open={filters.pickers.open.student} onClose={() => filters.pickers.setOpen.student(false)} fullWidth maxWidth='xs'>
+            <Box>
                 <DialogTitle>Estudiantes</DialogTitle>
                 <List>
                     {students?.filter(s => {
@@ -597,8 +601,8 @@ function Pickers({ filters, studentShouldBeVisible }: { filters: ReturnType<type
             </Box>
         </Dialog>
 
-        <Dialog open={filters.pickers.open.teacher} onClose={() => filters.pickers.setOpen.teacher(false)}>
-            <Box sx={{ width: 450, maxWidth: '100%' }}>
+        <Dialog open={filters.pickers.open.teacher} onClose={() => filters.pickers.setOpen.teacher(false)} fullWidth maxWidth='xs'>
+            <Box>
                 <DialogTitle>Docentes</DialogTitle>
                 <List>
                     {teachers?.map(teacher => <ListItemButton

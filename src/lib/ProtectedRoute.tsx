@@ -106,7 +106,7 @@ function LoadingRoute() {
 export function SignedInAppBar() {
     return (
         <Box sx={{ flexGrow: 1 }}>
-            <AppBar position="static">
+            <AppBar position="static" sx={{ backgroundColor: '#111' }}>
                 <Toolbar>
                     <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                         Comunicaciones
@@ -124,7 +124,7 @@ export function SignedInAppBar() {
 export function SignedOutAppBar() {
     return (
         <Box sx={{ flexGrow: 1 }}>
-            <AppBar position="static">
+            <AppBar position="static" sx={{ backgroundColor: '#111' }}>
                 <Toolbar>
                     {/* <IconButton
               size="large"
