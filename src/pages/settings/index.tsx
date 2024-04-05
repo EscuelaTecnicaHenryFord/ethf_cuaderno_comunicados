@@ -109,7 +109,16 @@ function FileEditor(props: { filename: string }) {
         </DialogActions>
       </Dialog>
       <div className="fixed top-[105px] sm:top-[113px] left-0 right-0 bottom-0">
-        <Editor height="100%" defaultLanguage="json" defaultValue={data} key={(data != undefined && data != null) ? filename : 0} onChange={v => setContent(v || null)} />
+        <Editor
+          height="100%"
+          defaultLanguage="json"
+          defaultValue={data}
+          options={{
+            "autoIndent": "full",
+            "formatOnPaste": true,
+            "formatOnType": true,
+          }}
+          key={(data != undefined && data != null) ? filename : 0} onChange={v => setContent(v || null)} />
       </div>
       <div className="fixed right-2 bottom-2">
         <Button variant="outlined" onClick={save}>
