@@ -8,5 +8,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: "Invalid filename" })
     }
 
-    res.json(await settings.getFile(file))
+    res.json(JSON.parse(await settings.getFile(file)))
 }
