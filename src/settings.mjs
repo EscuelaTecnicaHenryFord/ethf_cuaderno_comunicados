@@ -121,7 +121,6 @@ export class Settings {
 
     /** @param {string} email */
     async getSubjectsOfTeacher(email) {
-        await this._autoImport();
         return this.subjects.filter(subject => subject.teachers.includes(email));
     }
 
@@ -196,6 +195,7 @@ export class Settings {
             this.teachers = teachers;
             this.students = students;
             this.subjects = subjects;
+            this.subjects.push(...this.createDefaultSujbects(teachers, this.getCourses()))
             this.general = {
                 ...general, messages: latestModelMessages,
                 sentiments: general.sentiments || [
@@ -325,6 +325,25 @@ export class Settings {
         if (await this._verifySaveFile(name, data)) {
             await writeFile(path.join(env.SETTINGS_PATH, name), data)
         }
+    }
+
+    // All teachers on all courses
+    /**
+     * @param {z.infer<typeof teacherSchema>[]} teachers
+     * @param {Array<{year: number, label: string}>} courses
+     */
+    createDefaultSujbects(teachers, courses) {
+        const subjects = []
+        const allTeachearsEmails = teachers.map(teacher => teacher.email)
+        for (const course of courses) {
+            subjects.push({
+                name: `Reemplazo ${course.label}`,
+                code: `RPLZ${course.year}`,
+                teachers: allTeachearsEmails,
+                courseYear: course.year
+            })
+        }
+        return subjects
     }
 }
 
