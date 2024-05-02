@@ -18,6 +18,8 @@ export const compatGeneralSettingsSchema = z.object({
         color: z.string(),
     })).optional().nullable(),
     reportToEmails: z.array(z.string()).optional().nullable(),
+    reeplacementSubject: z.boolean().default(false).catch(false),
+    disableControlledAccess: z.boolean().default(false).catch(false),
 })
 
 export const generalSettingsSchema = z.object({
@@ -32,6 +34,8 @@ export const generalSettingsSchema = z.object({
         color: z.string(),
     })),
     reportToEmails: z.array(z.string()).optional().nullable(),
+    reeplacementSubject: z.boolean().default(false).catch(false),
+    disableControlledAccess: z.boolean().default(false).catch(false),
 })
 
 export const teacherSchema = z.object({
@@ -66,6 +70,8 @@ export class Settings {
         messages: [],
         admins: [],
         sentiments: [],
+        disableControlledAccess: false,
+        reeplacementSubject: false,
     }
 
     /** @type {Map<string, z.infer<typeof studentSchema>>} */
@@ -274,6 +280,8 @@ export class Settings {
                 { code: 'neutral', color: 'black' },
             ],
             admins: [],
+            disableControlledAccess: false,
+            reeplacementSubject: false,
         };
 
         this._studentsByEnrolment = new Map();

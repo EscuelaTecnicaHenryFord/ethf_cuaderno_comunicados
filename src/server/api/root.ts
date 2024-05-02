@@ -29,7 +29,17 @@ export const appRouter = createTRPCRouter({
   }),
   getSubjectsOfYear: protectedProcedure.input(z.number()).query(async ({ input, ctx }) => {
     const role = await settings.getUserRole(ctx.session.user.email || '');
-    return await settings.getSubjectsOfYear(input);
+    const subjects = await settings.getSubjectsOfYear(input);
+    if(settings.general.disableControlledAccess) {
+      const allTeachersEmails = (await settings.getTeachers()).map(teacher => teacher.email);
+
+      return subjects.map(subject => ({
+        ...subject,
+        teachers: allTeachersEmails,
+      }));
+    }
+
+    return subjects
   }),
   getSubject: protectedProcedure.input(z.string()).query(({ input }) => {
     return settings.getSubject(input);
