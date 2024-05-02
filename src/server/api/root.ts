@@ -71,7 +71,7 @@ export const appRouter = createTRPCRouter({
       throw new Error('User is not a teacher')
     }
 
-    if (!role.isAdmin) {
+    if (!role.isAdmin && !settings.general.disableControlledAccess) {
       for (const item of input) {
         if (item.timestamp.valueOf() > Date.now() + 10 * 1000 * 60) throw new Error('Invalid timestamp')
         if (item.timestamp.valueOf() < Date.now() - 10 * 1000 * 60 * 60 * 24) throw new Error('Invalid timestamp')
