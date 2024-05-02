@@ -201,7 +201,9 @@ export class Settings {
             this.teachers = teachers;
             this.students = students;
             this.subjects = subjects;
-            this.subjects.push(...this.createDefaultSujbects(teachers, this.getCourses()))
+            if (general.reeplacementSubject) {
+                this.subjects.push(...this.createReeplacementSubjects(teachers, this.getCourses()))
+            }
             this.general = {
                 ...general, messages: latestModelMessages,
                 sentiments: general.sentiments || [
@@ -340,7 +342,7 @@ export class Settings {
      * @param {z.infer<typeof teacherSchema>[]} teachers
      * @param {Array<{year: number, label: string}>} courses
      */
-    createDefaultSujbects(teachers, courses) {
+    createReeplacementSubjects(teachers, courses) {
         const subjects = []
         const allTeachearsEmails = teachers.map(teacher => teacher.email)
         for (const course of courses) {
