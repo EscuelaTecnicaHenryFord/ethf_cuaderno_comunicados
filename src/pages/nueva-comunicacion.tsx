@@ -51,6 +51,7 @@ export function NewCommunication() {
     const { data: students } = api.getStudentsOf.useQuery(courseYear || 0, { enabled: !!courseYear })
     const { data: subjects } = api.getSubjectsOfYear.useQuery(courseYear || 0, { enabled: !!courseYear })
     const { data: messages } = api.getMessages.useQuery()
+    const { data: categories } = api.getCategories.useQuery()
     const { mutateAsync: createCommunications } = api.createCommunications.useMutation()
 
     const role = useUserRole()
@@ -59,6 +60,7 @@ export function NewCommunication() {
     const [timestamp, setTimestamp] = useState(dayjs())
     const [message, setMessage] = useState('')
     const [comment, setComment] = useState('')
+    const [category, setCategory] = useState<string>()
     const [action_taken, setActionTaken] = useState('')
     const [selectedStudents, setSelectedStudents] = useState<string[]>([])
     const filteredSelectedStudents = useMemo(() => {
@@ -98,7 +100,8 @@ export function NewCommunication() {
             message: message,
             comment: comment,
             student: student?.enrolment || '',
-            action_taken: action_taken
+            action_taken: action_taken,
+            category: category,
         }))).then(() => {
             setLoading(false)
             void router.push({
@@ -150,7 +153,6 @@ export function NewCommunication() {
                                     </Select>
                                 </FormControl>
                             </div>
-
                             <div className='mt-3'>
                                 <FormControl fullWidth>
                                     <InputLabel id="demo-simple-select-label">Agregar estudiante</InputLabel>
@@ -230,6 +232,23 @@ export function NewCommunication() {
                                     value={action_taken}
                                     onChange={e => setActionTaken(e.target.value)}
                                 />
+                            </div>
+                            <div className='mt-3'>
+                                <FormControl fullWidth>
+                                    <InputLabel id="demo-simple-select-label">Categoría</InputLabel>
+                                    <Select
+                                        labelId="demo-simple-select-label"
+                                        id="demo-simple-select"
+                                        value={category ?? ''}
+                                        label="Agregar estudiante"
+                                        onChange={(value) => {
+                                            setCategory(value.target.value?.toString() || undefined)
+                                        }}
+                                    >
+                                        <MenuItem value=''><span className='py-1'>Sin categoría</span></MenuItem>
+                                        {categories?.map(category => <MenuItem value={category.code} key={category.code}><span className='py-1'>{category.name}</span></MenuItem>)}
+                                    </Select>
+                                </FormControl>
                             </div>
                         </Grid>
                     </Grid>

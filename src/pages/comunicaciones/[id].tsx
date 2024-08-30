@@ -24,18 +24,20 @@ export default function Communication() {
     const { mutateAsync: updateCommunicationFollowUp } = api.updateCommunicationFollowUp.useMutation()
 
     const [followUpState, setFollowUpState] = useState<string | null>(null);
+    const [category, setCategory] = useState<string | null>(null);
     const [followUp, setFollowUp] = useState<string | null>(null);
 
     useEffect(() => {
         if (isFetched && data && followUpState == null && followUp == null) {
             setFollowUpState(data.state as unknown as string)
             setFollowUp(data.followup as unknown as string)
+            setCategory(data.category || null)
         }
     }, [isFetched, data, followUpState, followUp])
 
     const e404 = (data == null && !isInitialLoading && !error) || !id
 
-    const pendingChanges = data && (followUpState != data.state || followUp != data.followup)
+    const pendingChanges = data && (followUpState != data.state || followUp != data.followup || category != data.category)
 
     return <ProtectedRoute>
         <AppBar />
@@ -98,6 +100,16 @@ export default function Communication() {
                             }}
                         />
                     </div>
+                    <div className="mt-3">
+
+
+                    <CategorySelect
+                        value={category || ''}
+                        onChange={(value) => {
+                            setCategory(value || null)
+                        }}
+                    />
+                </div>
                 </div>
             </div>}
 
@@ -124,7 +136,7 @@ export default function Communication() {
                 {pendingChanges && <Button variant="outlined" startIcon={<SaveIcon />} color="primary" className="mt-2"
                     onClick={() => {
                         if (followUpState === null || followUp === null) return;
-                        void updateCommunicationFollowUp({ id, followUp, state: followUpState as unknown as ("pending" | "in_process" | "finalized") }).then(() => {
+                        void updateCommunicationFollowUp({ id, followUp, state: followUpState as unknown as ("pending" | "in_process" | "finalized"), category }).then(() => {
                             void refetch()
                         })
                     }}
@@ -149,6 +161,23 @@ function StateSelect({ onChange, value }: { onChange?: (value: string) => unknow
             <MenuItem value={"pending"}><Dot color="#bbbbbb" />Pendiente</MenuItem>
             <MenuItem value={"in_process"}><Dot color="#ffea00" />En proceso</MenuItem>
             <MenuItem value={"finalized"}><Dot color="#76ff03" />Finalizado</MenuItem>
+        </Select>
+    </FormControl>
+}
+
+function CategorySelect({ onChange, value }: { onChange?: (value: string) => unknown, value?: string }) {
+    const { data: categories } = api.getCategories.useQuery()
+
+    return <FormControl fullWidth>
+        <InputLabel id="category-select-label">Categoría</InputLabel>
+        <Select
+            labelId="category-select-label"
+            id="cateogry-select"
+            value={value}
+            label="Categoría"
+            onChange={e => onChange?.(e.target.value)}
+        >
+            {categories?.map(category => <MenuItem value={category.code} key={category.code}><span className='py-1'>{category.name}</span></MenuItem>)}
         </Select>
     </FormControl>
 }

@@ -47,6 +47,9 @@ export const appRouter = createTRPCRouter({
   getMessages: protectedProcedure.query(({ ctx }) => {
     return settings.getMessages()
   }),
+  getCategories: protectedProcedure.query(({ ctx }) => {
+    return settings.getCategories()
+  }),
   getUserRole: protectedProcedure.query(({ ctx }) => {
     return settings.getUserRole(ctx.session.user.email || '');
   }),
@@ -59,7 +62,8 @@ export const appRouter = createTRPCRouter({
     comment: z.string(),
     action_taken: z.string(),
     student: z.string(),
-    timestamp: z.date()
+    timestamp: z.date(),
+    category: z.string().nullable().optional(),
   }))).mutation(async ({ input, ctx }) => {
     const teacherEmail = ctx.session.user.email;
     if (!teacherEmail) throw new Error('No email found in session');
@@ -103,7 +107,8 @@ export const appRouter = createTRPCRouter({
         timestamp: item.timestamp,
         teacherEmail: teacherEmail,
         action_taken: item.action_taken,
-        poolId: poolId
+        poolId: poolId,
+        category: item.category,
       }
     })))
   }),
@@ -115,6 +120,7 @@ export const appRouter = createTRPCRouter({
     subject: z.string().nullable(),
     teacher: z.string().nullable(),
     course: z.number().nullable(),
+    category: z.string().nullable(),
   }).optional()).query(async ({ ctx, input }) => {
     if (!ctx.session.user.email) throw new Error('No email found in session');
     const role = await settings.getUserRole(ctx.session.user.email || '');
@@ -132,6 +138,7 @@ export const appRouter = createTRPCRouter({
         },
         studentEnrolment: input?.student || undefined,
         subjectCode: input?.subject || undefined,
+        category: input?.category || undefined,
       }
     })
 
@@ -220,6 +227,7 @@ export const appRouter = createTRPCRouter({
     id: z.string(),
     followUp: z.string(),
     state: z.literal('pending').or(z.literal('in_process')).or(z.literal('finalized')),
+    category: z.string().nullable().optional(),
   })).mutation(async ({ ctx, input }) => {
     const role = await settings.getUserRole(ctx.session.user.email || '');
     if (!role.isAdmin) throw new TRPCError({
@@ -233,6 +241,7 @@ export const appRouter = createTRPCRouter({
       data: {
         followup: input.followUp,
         state: input.state,
+        category: input.category,
       }
     })
   })

@@ -67,18 +67,30 @@ export function useFilters() {
         history: 'replace',
     });
 
+    const [category, setCategory] = useQueryState('category', {
+        parse: (value): string | null => {
+            return value || null;
+        },
+        serialize: (value: string | null): string => {
+            if (!value) return '';
+            return `${value}`;
+        },
+        history: 'replace',
+    });
+
     const [openDateRange, setOpenDateRange] = useState(false);
     const [openCourse, setOpenCourse] = useState(false);
     const [openSubject, setOpenSubject] = useState(false);
     const [openStudent, setOpenStudent] = useState(false);
     const [openTeacher, setOpenTeacher] = useState(false);
+    const [openCategory, setOpenCategory] = useState(false);
 
     return {
         values: {
-            course, subject, student, teacher, dateRange
+            course, subject, student, teacher, dateRange, category
         },
         setters: {
-            setCourse, setSubject, setStudent, setTeacher, setDateRange
+            setCourse, setSubject, setStudent, setTeacher, setDateRange, setCategory
         },
         pickers: {
             open: {
@@ -86,14 +98,16 @@ export function useFilters() {
                 course: openCourse,
                 subject: openSubject,
                 student: openStudent,
-                teacher: openTeacher
+                teacher: openTeacher,
+                category: openCategory
             },
             setOpen: {
                 dateRange: setOpenDateRange,
                 course: setOpenCourse,
                 subject: setOpenSubject,
                 student: setOpenStudent,
-                teacher: setOpenTeacher
+                teacher: setOpenTeacher,
+                category: setOpenCategory
             }
         }
     }

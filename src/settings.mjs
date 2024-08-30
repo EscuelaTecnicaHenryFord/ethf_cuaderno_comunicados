@@ -17,6 +17,10 @@ export const compatGeneralSettingsSchema = z.object({
         code: z.string(),
         color: z.string(),
     })).optional().nullable(),
+    categories: z.array(z.object({
+        name: z.string(),
+        code: z.string(),
+    })).default([]).catch([]),
     reportToEmails: z.array(z.string()).optional().nullable(),
     reeplacementSubject: z.boolean().default(false).catch(false),
     disableControlledAccess: z.boolean().default(false).catch(false),
@@ -33,6 +37,10 @@ export const generalSettingsSchema = z.object({
         code: z.string(),
         color: z.string(),
     })),
+    categories: z.array(z.object({
+        name: z.string(),
+        code: z.string(),
+    })).default([]).catch([]),
     reportToEmails: z.array(z.string()).optional().nullable(),
     reeplacementSubject: z.boolean().default(false).catch(false),
     disableControlledAccess: z.boolean().default(false).catch(false),
@@ -70,6 +78,7 @@ export class Settings {
         messages: [],
         admins: [],
         sentiments: [],
+        categories: [],
         disableControlledAccess: false,
         reeplacementSubject: false,
     }
@@ -165,6 +174,11 @@ export class Settings {
         });
     }
 
+    async getCategories() {
+        await this._autoImport();
+        return this.general.categories;
+    }
+
     /** @param {string} email */
     async getTeacher(email) {
         await this._autoImport();
@@ -206,6 +220,7 @@ export class Settings {
             }
             this.general = {
                 ...general, messages: latestModelMessages,
+                categories: general.categories || [],
                 sentiments: general.sentiments || [
                     { code: 'neutral', color: 'black' },
                 ]
@@ -281,6 +296,7 @@ export class Settings {
             sentiments: [
                 { code: 'neutral', color: 'black' },
             ],
+            categories: [],
             admins: [],
             disableControlledAccess: false,
             reeplacementSubject: false,

@@ -39,6 +39,7 @@ import { nameInitials, stringAvatar, transformName } from '~/lib/util/nameUtils'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ProtectedRoute from '~/lib/ProtectedRoute';
 import { useUserRole } from '~/lib/util/useUserRole';
+import { CategoryOutlined } from '@mui/icons-material';
 
 
 export default function CommunicationsWrapper() {
@@ -62,6 +63,7 @@ export function Communications() {
         subject: filters.values.subject,
         course: filters.values.course,
         teacher: filters.values.teacher,
+        category: filters.values.category,
     }, {
         refetchInterval: 1000 * 60,
     })
@@ -235,6 +237,17 @@ export function Communications() {
             label={`${filters.values.teacher}`}
             onClick={() => filters.pickers.setOpen.teacher(true)}
             onDelete={() => void filters.setters.setTeacher(null)} />}
+
+        {!filters.values.category && <Chip
+            icon={<AddIcon />}
+            label="Categoría"
+            onClick={() => filters.pickers.setOpen.category(true)}
+        />}
+        {filters.values.category && <Chip
+            icon={<CategoryOutlined />}
+            label={`${filters.values.category}`}
+            onClick={() => filters.pickers.setOpen.category(true)}
+            onDelete={() => void filters.setters.setCategory(null)} />}
     </>
 
     const [filtersOpen, setFiltersOpen] = useState(false)
@@ -398,6 +411,7 @@ function Pickers({ filters, studentShouldBeVisible }: { filters: ReturnType<type
     const { data: mySubjects } = api.getMySubjects.useQuery(undefined, { enabled: !role.isAdmin })
     const { data: students } = api.getAllStudents.useQuery()
     const { data: teachers } = api.getTeachers.useQuery()
+    const { data: categories } = api.getCategories.useQuery()
 
     const today = dayjs().startOf('day')
     const todayEnd = dayjs().endOf('day')
@@ -444,6 +458,10 @@ function Pickers({ filters, studentShouldBeVisible }: { filters: ReturnType<type
 
     function closeTeacher() {
         filters.pickers.setOpen.teacher(false)
+    }
+
+    function closeCategory() {
+        filters.pickers.setOpen.category(false)
     }
 
     return <React.Fragment>
@@ -635,6 +653,23 @@ function Pickers({ filters, studentShouldBeVisible }: { filters: ReturnType<type
                                 </React.Fragment>
                             }
                         />
+                    </ListItemButton>)}
+                </List>
+            </Box>
+        </Dialog>
+
+        <Dialog open={filters.pickers.open.category} onClose={() => filters.pickers.setOpen.category(false)} fullWidth maxWidth='xs'>
+            <Box>
+                <DialogTitle>Categoría</DialogTitle>
+                <List>
+                    {categories?.map(category => <ListItemButton
+                        key={category.code}
+                        onClick={() => {
+                            void filters.setters.setCategory(category.code)
+                            closeCategory()
+                        }}
+                    >
+                        <ListItemText className='ml-2' primary={category.name} />
                     </ListItemButton>)}
                 </List>
             </Box>
